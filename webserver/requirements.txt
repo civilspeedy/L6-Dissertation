@@ -1,5 +1,5 @@
 flask
-tensorflow-gpu
+tensorflow
 transformers
 torch
 gpt-2-simple

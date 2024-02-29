@@ -5,15 +5,7 @@ from modules.Api import Api
 
 class Geocoding(Api):
     def __init__(self):
-        self.key = self.get_key()
-
-    def get_key(self):
-        try:
-            file = open('keys.txt', "r")
-            key = file.read()
-            return key
-        except:
-            print("failed to read key")
+        self.key = self.get_key('locIq')
 
     def reverse(self, lat, long):
         url = f"https://us1.locationiq.com/v1/reverse?key={self.key}&lat={lat}&lon={long}&format=json&"

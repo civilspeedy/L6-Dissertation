@@ -3,6 +3,8 @@ from flask import Flask, jsonify, make_response, request
 from modules.Geocoding import Geocoding
 import csv
 
+from modules.weather import Visual_Crossing
+
 app = Flask(__name__)
 
 
@@ -48,4 +50,6 @@ class Csv_manipulator:
 
 if __name__ == '__main__':
     geo = Geocoding()
-    print(geo.reverse(50.724645, -1.867095321855011))
+    print(geo.key)
+    vc = Visual_Crossing()
+    print(vc.get_date(1))  # unknown syntax error
