@@ -50,6 +50,3 @@ class Csv_manipulator:
 
 if __name__ == '__main__':
     geo = Geocoding()
-    print(geo.key)
-    vc = Visual_Crossing()
-    print(vc.get_date(1))  # unknown syntax error

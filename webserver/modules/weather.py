@@ -1,7 +1,5 @@
 from datetime import date
 import datetime
-import os
-import requests
 
 from modules.Api import Api
 
@@ -27,8 +25,9 @@ class Visual_Crossing(Weather):
         self.key = self.get_key('vc')
 
     def request_forecast(self, days):
-        url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/bournemouth/2024-02-01/2024-03-22?unitGroup=metric&key={self.key}&contentType=json"
+        today = date.today()
+        url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/bournemouth/{today}/{self.get_date(today, days)}?unitGroup=metric&key={self.key}&contentType=json"
+        return self.send_request(url)
 
-    def get_date(self, days):
-        current_date = date.today()
-        return current_date + datetime.timedelta(days=days)
+    def get_date(self, today, days):
+        return today + datetime.timedelta(days=days)
