@@ -2,7 +2,7 @@ from flask import Flask, jsonify, make_response, request
 from modules.Geocoding import Geocoding
 
 
-from modules.weather import Open_Metro, Visual_Crossing
+from modules.Weather import Open_Metro, Visual_Crossing
 
 app = Flask(__name__)
 
