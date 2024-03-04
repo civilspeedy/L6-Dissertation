@@ -35,13 +35,19 @@ class Api:
         file_location = "./data/weather_data.json"
         tagged_json = {}
 
+        print(weather_json)
+        weather_json = json.JSONDecoder().decode(weather_json)
+
         match survice_name:
             case "locIq":
                 file_location = "./data/geocoding.json"
             case "vc":
-                tagged_json["vissual crossing"] = weather_json
+                tagged_json["visual crossing"] = weather_json
             case "om":
                 tagged_json["open metro"] = weather_json
+
+        with open(file_location, "w") as json_file:
+            json.dump(tagged_json, json_file)
 
         # https://stackoverflow.com/questions/12309269/how-do-i-write-json-data-to-a-file
         try:

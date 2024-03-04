@@ -49,4 +49,5 @@ class Csv_manipulator:
 
 
 if __name__ == '__main__':
-    geo = Geocoding()
+    vc = Visual_Crossing()
+    vc.write_to_json(vc.request_forecast(1), "vc")

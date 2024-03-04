@@ -27,7 +27,8 @@ class Visual_Crossing(Weather):
     def request_forecast(self, days):
         today = date.today()
         url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/bournemouth/{today}/{self.get_date(today, days)}?unitGroup=metric&key={self.key}&contentType=json"
-        return self.send_request(url)
+        response = self.send_request(url)
+        return str(response).replace('\\"', "\"")
 
     def get_date(self, today, days):
         return today + datetime.timedelta(days=days)
