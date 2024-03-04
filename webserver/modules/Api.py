@@ -1,11 +1,10 @@
-from fileinput import filelineno
 import requests
 import json
 
 
 class Api:
     def __init__(self):
-        pass
+        self.locIQ_location, self.weather_data_location = "./data/geocoding.json", "./data/weather_data.json"
 
     def send_request(self, url):
         try:
@@ -31,28 +30,40 @@ class Api:
         except:
             print("failed to read key")
 
-    def write_to_json(self, weather_json, survice_name):
-        file_location = "./data/weather_data.json"
+    def write_to_json(self, weather_json, service_name):
+        file_location = self.weather_data_location
         tagged_json = {}
 
-        print(weather_json)
         weather_json = json.JSONDecoder().decode(weather_json)
+        # had formatting issues, this solved it https://stackoverflow.com/questions/15272421/python-json-dumps
 
-        match survice_name:
+        match service_name:
             case "locIq":
-                file_location = "./data/geocoding.json"
+                file_location = self.locIQ_location
             case "vc":
                 tagged_json["visual crossing"] = weather_json
             case "om":
                 tagged_json["open metro"] = weather_json
 
-        with open(file_location, "w") as json_file:
-            json.dump(tagged_json, json_file)
-
         # https://stackoverflow.com/questions/12309269/how-do-i-write-json-data-to-a-file
         try:
-            with open(file_location, "w", encoding="utf-8") as file:
+            with open(file_location, "a", encoding="utf-8") as file:
                 json.dump(tagged_json, file, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"Err in {survice_name}.write_to_json ", e)
-            # I believe this functional but would not be surprise if otherwise
+            print(f"Err in {service_name}.write_to_json ", e)
+
+    def read_from_json(self, service_name):
+        file_location = self.weather_data_location
+
+        data_store = []
+
+        if service_name == "locIQ":
+            file_location = self.locIQ_location
+
+        try:
+            with open(file_location) as file:  # exceeds load size
+                data_store.append(json.loads(file))
+            return data_store
+
+        except Exception as e:
+            print(f"Err in {service_name}.read_from_json", e)
