@@ -24,4 +24,4 @@ def user_message():
 if __name__ == '__main__':
     vc = Visual_Crossing()
     om = Open_Metro()
-    print(vc.read_from_json('vc'))
+    om.write_to_json(om.request_forecast(1), "om")
