@@ -8,6 +8,9 @@ class Weather(Api):
     def __init__(self):
         super().__init__()
 
+    def compare_reports(self):
+        pass
+
 
 class Open_Metro(Weather):
     # https://pypi.org/project/requests/
