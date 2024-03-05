@@ -24,4 +24,5 @@ def user_message():
 if __name__ == '__main__':
     vc = Visual_Crossing()
     om = Open_Metro()
-    om.doneAlready()
+
+    print(om.done_already('2024-03-04'))
