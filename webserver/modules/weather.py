@@ -4,29 +4,7 @@ import datetime
 from modules.Api import Api
 
 
-class Weather(Api):
-    def __init__(self):
-        super().__init__()
-
-    def done_already(self, requested_date):
-        json, return_array = self.read_from_json(None), []
-
-        if json != None:
-            for item in json:
-                dates = []
-                if item != None:
-                    if isinstance(item, dict):
-                        dates = item["open metro"]["hourly"]["time"]
-                    elif isinstance(item, list):
-                        dates = (item[0]["visual crossing"]
-                                 ["hourly"]["time"])  # not sure why formatter is doing this
-                    for date in dates:
-                        if date[:10] == requested_date:
-                            return_array.append(item)
-        return return_array  # sort of works, data looked a bit odd, needs another look
-
-
-class Open_Metro(Weather):
+class Open_Metro(Api):
     # https://pypi.org/project/requests/
     def __init__(self):
         super().__init__()
@@ -36,7 +14,7 @@ class Open_Metro(Weather):
         return self.send_request(url)
 
 
-class Visual_Crossing(Weather):
+class Visual_Crossing(Api):
     def __init__(self,):
         super().__init__()
         self.key = self.get_key('vc')

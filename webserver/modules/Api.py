@@ -108,3 +108,30 @@ class Api:
                 return json.load(file)
         except Exception as e:
             print(f"Err in {service_name}.read_from_json", e)
+
+    def check_report_exists(self, requested_date):
+        json, return_array = self.read_from_json(None), []
+
+        # needs to check if locations are the same
+        if json != None:
+            for item in json:
+                dates = []
+                if item != None:
+                    if isinstance(item, dict):
+                        dates = item["open metro"]["hourly"]["time"]
+                    elif isinstance(item, list):
+                        dates = (item[0]["visual crossing"]
+                                 ["hourly"]["time"])  # not sure why formatter is doing this
+                    for date in dates:
+                        if date[:10] == requested_date:
+                            return_array.append(item)
+        return return_array  # sort of works, data looked a bit odd, needs another look
+
+    def format_report(self):
+        json = self.read_from_json(None)
+        # not sure if nessisary
+
+        if json != None:
+            for item in json:
+                if isinstance(item, dict):
+                    print(item["open metro"]["hourly"]["apparent_temperature"])
