@@ -24,6 +24,4 @@ def user_message():
 if __name__ == '__main__':
     vc = Visual_Crossing()
     om = Open_Metro()
-    json = vc.read_from_json('vc')
-    if json != None:
-        print(json[1])
+    om.doneAlready()

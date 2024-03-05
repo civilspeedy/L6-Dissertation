@@ -8,8 +8,19 @@ class Weather(Api):
     def __init__(self):
         super().__init__()
 
-    def compare_reports(self):
-        pass
+    def doneAlready(self, requested_date):
+        json = self.read_from_json(None)
+        if json != None:
+            for item in json:
+                dates = []
+                if isinstance(item, dict):
+                    dates = item["open metro"]["hourly"]["time"]
+                elif isinstance(item, list):
+                    dates = (item[0]["visual crossing"]
+                             ["hourly"]["time"])  # not sure why formatter is doing this
+                for date in dates:
+                    if date[:10] == requested_date:
+                        return [True, item]
 
 
 class Open_Metro(Weather):
