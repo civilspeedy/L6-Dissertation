@@ -1,11 +1,9 @@
-import requests
-
 from modules.Api import Api
 
 
 class Geocoding(Api):
     def __init__(self):
-        self.key = self.get_key('locIq')
+        self.key = self.get_key("locIq")
 
     def reverse(self, lat, long):
         url = f"https://us1.locationiq.com/v1/reverse?key={self.key}&lat={lat}&lon={long}&format=json&"

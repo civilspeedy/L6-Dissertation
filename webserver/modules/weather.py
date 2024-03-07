@@ -15,15 +15,17 @@ class Open_Metro(Api):
 
 
 class Visual_Crossing(Api):
-    def __init__(self,):
+    def __init__(
+        self,
+    ):
         super().__init__()
-        self.key = self.get_key('vc')
+        self.key = self.get_key("vc")
 
     def request_forecast(self, days):
         today = date.today()
         url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/bournemouth/{today}/{self.get_date(today, days)}?unitGroup=metric&key={self.key}&contentType=json"
         response = self.send_request(url)
-        return str(response).replace('\\"', "\"")
+        return str(response).replace('\\"', '"')
 
     def get_date(self, today, days):
         return today + datetime.timedelta(days=days)

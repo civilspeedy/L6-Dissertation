@@ -1,4 +1,3 @@
-from ctypes.wintypes import tagRECT
 import os
 import requests
 import json
@@ -9,7 +8,10 @@ class Api:
 
     def __init__(self):
         """Constructor where file locations are defined."""
-        self.locIQ_location, self.weather_data_location = "./data/geocoding.json", "./data/weather_data.json"
+        self.locIQ_location, self.weather_data_location = (
+            "./data/geocoding.json",
+            "./data/weather_data.json",
+        )
 
     def send_request(self, url):
         """Method for sending http requests using passed url and returns data in wrapped in string.
@@ -45,16 +47,16 @@ class Api:
         Returns:
         String: the required api key as a string."""
         try:
-            file = open('keys.txt', "r")
+            file = open("keys.txt", "r")
             key = file.read()
             key_change = str(key).rfind("?")
             match service_name:
-                case 'locIq':
+                case "locIq":
                     return key[:key_change]
-                case 'vc':
-                    return key[key_change + 1:]
-        except:
-            print("failed to read key")
+                case "vc":
+                    return key[key_change + 1 :]
+        except Exception as e:
+            print("failed to read key:", e)
 
     def write_to_json(self, json_data, service_name):
         """Writes a passed dict into the corresponding json file.
@@ -84,7 +86,7 @@ class Api:
                 json_array.append(data_before)
 
             json_array.append(tagged_json)
-        # https://stackoverflow.com/questions/12309269/how-do-i-write-json-data-to-a-file
+            # https://stackoverflow.com/questions/12309269/how-do-i-write-json-data-to-a-file
             with open(file_location, "w", encoding="utf-8") as file:
                 json.dump(json_array, file, ensure_ascii=False, indent=2)
         except Exception as e:
@@ -113,15 +115,16 @@ class Api:
         json, return_array = self.read_from_json(None), []
 
         # needs to check if locations are the same
-        if json != None:
+        if json is not None:
             for item in json:
                 dates = []
-                if item != None:
+                if item is not None:
                     if isinstance(item, dict):
                         dates = item["open metro"]["hourly"]["time"]
                     elif isinstance(item, list):
-                        dates = (item[0]["visual crossing"]
-                                 ["hourly"]["time"])  # not sure why formatter is doing this
+                        dates = item[0]["visual crossing"]["hourly"][
+                            "time"
+                        ]  # not sure why formatter is doing this
                     for date in dates:
                         if date[:10] == requested_date:
                             return_array.append(item)
@@ -131,7 +134,7 @@ class Api:
         json = self.read_from_json(None)
         # not sure if nessisary
 
-        if json != None:
+        if json is not None:
             for item in json:
                 if isinstance(item, dict):
                     print(item["open metro"]["hourly"]["apparent_temperature"])
