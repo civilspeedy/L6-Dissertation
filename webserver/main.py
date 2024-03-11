@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, make_response, request
+from modules.Speaker import Speaker
 
 
 from modules.Weather import Open_Metro, Visual_Crossing
@@ -21,6 +22,5 @@ def user_message():
 
 
 if __name__ == "__main__":
-    vc = Visual_Crossing()
-    om = Open_Metro()
-    om.format_report()
+    speaker = Speaker()
+    speaker.talk()
