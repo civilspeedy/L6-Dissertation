@@ -1,15 +1,12 @@
-from transformers import GemmaModel
-
-
 class Speaker:
     def __init__(self):
-        self.model = GemmaModel.from_pretrained("google/gemma-2b")
+        self.key = self.get_key()
 
-    def talk(self):
-        while True:
-            user_input = input(">>")
-            if user_input == "end":
-                break
-            else:
-                response = self.model.generate(user_input)
-                print(response)
+    def get_key(self):
+        try:
+            file = open("keys.txt", "r")
+            keys = file.read()
+            key_change = str(keys).rfind("~")
+            return keys[key_change + 1 :]
+        except Exception as e:
+            print("Failed to read key:", e)
