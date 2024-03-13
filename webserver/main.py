@@ -1,9 +1,6 @@
 from flask import Flask, jsonify, make_response, request
 from modules.Speaker import Speaker
 
-
-from modules.Weather import Open_Metro, Visual_Crossing
-
 app = Flask(__name__)
 
 
