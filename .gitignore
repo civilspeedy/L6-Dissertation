@@ -153,3 +153,4 @@ cython_debug/
 /venv
 /.vscode
 webserver/.vscode/settings
+/.zed
