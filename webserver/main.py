@@ -6,6 +6,8 @@ app = Flask(__name__)
 
 @app.route("/")
 def hello():
+    # authorisation needs to be set up
+    print("Someone has connected") 
     return "Test Message"
 
 
@@ -17,7 +19,5 @@ def user_message():
         return make_response(jsonify({"result": "no input"}, 400))
     return make_response(jsonify({"result": "ok"}, 200))
 
-
 if __name__ == "__main__":
-    speaker = Speaker()
-    speaker.talk()
+    app.run(debug=True, host='0.0.0.0')
