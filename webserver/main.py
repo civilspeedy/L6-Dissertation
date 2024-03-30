@@ -19,6 +19,11 @@ def user_message():
     return make_response(jsonify({"result": "ok"}, 200))
 
 
+@app.route("/api/testConversation", methods=["GET", "POST"])
+def test_conversation():
+    return make_response(jsonify({["hello"]}, 200))
+
+
 def run_local():
     app.run(debug=True)
 
