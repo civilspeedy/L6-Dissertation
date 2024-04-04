@@ -1,10 +1,16 @@
-import keras
-import keras_nlp
-import kaggle
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from huggingface_hub import login
 
 
 class Speaker:
-    # might not be arm64 compatible yet
     def __init__(self):
-        self.model = keras_nlp.models.GemmaCausalLM.from_preset("gemma_instruct_2b_en")
-        print(self.model.generate("hello", max_length=30))
+        login()
+        self.tokenizer = AutoTokenizer.from_pretrained("google/gemma-2b")
+        self.model = AutoModelForCausalLM.from_pretrained(
+            "google/gemma-2b", device_map="auto"
+        )
+        input_text = "Write me a poem about Machine Learning."
+        input_ids = self.tokenizer(input_text, return_tensors="pt")
+        input_ids = input_ids.to(self.model.device)
+        outputs = self.model.generate(**input_ids)
+        print(self.tokenizer.decode(outputs[0]))

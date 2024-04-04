@@ -2,6 +2,3 @@ flask
 tensorflow
 transformers
 torch
-kagglehub
-keras
-keras_nlp
