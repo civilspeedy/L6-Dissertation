@@ -99,7 +99,7 @@ class Api:
         - service_name (String): specifying which data to read.
 
         Returns:
-        Dict: dict cotaining the data from the json.
+        Dict: dict containing the data from the json.
 
         """
         file_location = self.weather_data_location

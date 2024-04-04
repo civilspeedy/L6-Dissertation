@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, make_response, request
+from modules.Speaker import Speaker
 
 app = Flask(__name__)
 
@@ -12,16 +13,11 @@ def hello():
 
 @app.route("/api/userMessage", methods=["GET", "POST"])
 def user_message():
-    string = request.args.get("string")
+    string = request.args.get("message")
     print(string)
     if string == "":
         return make_response(jsonify({"result": "no input"}, 400))
     return make_response(jsonify({"result": "ok"}, 200))
-
-
-@app.route("/api/testConversation", methods=["GET", "POST"])
-def test_conversation():
-    return make_response(jsonify({["hello"]}, 200))
 
 
 def run_local():
@@ -33,4 +29,4 @@ def run_on_network():
 
 
 if __name__ == "__main__":
-    run_local()
+    pass
