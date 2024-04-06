@@ -39,7 +39,7 @@ class Api:
         return json.loads(string)
 
     def get_key(self, service_name):
-        """Reads and returns the required api depending on wich service is needed.
+        """Reads and returns the required api depending on which service is needed.
 
         Parameters:
         - service_name (String): the name of the service requiring the key.
@@ -47,16 +47,19 @@ class Api:
         Returns:
         String: the required api key as a string."""
         try:
-            file = open("keys.txt", "r")
-            key = file.read()
-            key_change = str(key).rfind("?")
-            match service_name:
-                case "locIq":
-                    return key[:key_change]
-                case "vc":
-                    return key[key_change + 1 :]
+            with open("keys.json", "r") as file:
+                jsonFile = json.load(file)[0]
+
+                match service_name:
+                    case "nv":
+                        return jsonFile["nvidia"]
+                    case "locIq":
+                        return jsonFile["locationIq"]
+                    case "vc":
+                        return jsonFile["visualCrossing"]
+
         except Exception as e:
-            print("failed to read key:", e)
+            print("err in get_key ", e)
 
     def write_to_json(self, json_data, service_name):
         """Writes a passed dict into the corresponding json file.

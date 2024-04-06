@@ -1,25 +1,83 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from huggingface_hub import login
+import datetime
+import string
+from openai import OpenAI
+
+from modules.Api import Api
 
 
-class Speaker:
+class Speaker(Api):
+    # from https://build.nvidia.com/google/gemma-7b
     def __init__(self):
-        login()
-        self.tokenizer = AutoTokenizer.from_pretrained("google/gemma-2b")
-        self.model = AutoModelForCausalLM.from_pretrained(
-            "google/gemma-2b", device_map="auto"
+        super().__init__()
+        self.client = OpenAI(
+            base_url="https://integrate.api.nvidia.com/v1", api_key=self.get_key("nv")
+        )
+        self.test_string = """
+```json
+{
+    "start_date": "2023-10-27",
+    "end_date": "2023-10-27",
+    "just_today": true,
+    "location": "London"
+}
+```
+"""
+
+    def send_to_lm(self, prompt):
+        response = ""
+        request = self.client.chat.completions.create(
+            model="google/gemma-7b",
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            temperature=0.5,
+            top_p=1,
+            max_tokens=1024,
+            stream=True,
         )
 
-        self.model.config.hidden_activation = "gelu_pytorch_tanh"
+        for chunk in request:
+            if chunk.choices[0].delta.content is not None:
+                response += chunk.choices[0].delta.content
+        return response
 
-        input_text = "hello"
-        input_ids = self.tokenizer(input_text, return_tensors="pt")
-        input_ids = input_ids.to(self.model.device)
-        outputs = self.model.generate(
-            **input_ids,
-            max_new_tokens=200,
-            early_stopping=True,
-            pad_token_id=self.tokenizer.eos_token_id,
-        )
+    def gainIntent(self, userRequest):
+        # intent = self.send_to_lm(
+        #   f"""This is the user's request: '{userRequest}'.
+        # Please return in a json for the starting day and end day they want and the location they want.
+        # In this format:
+        # "start_date": start_date,
+        # "end_date": end_date,
+        # "just_today": boolean,
+        # "location": location
+        # """
+        # )
 
-        print(self.tokenizer.decode(outputs[0]))
+        intent = self.test_string
+        print(intent)
+        intent_json = self.format_lm_json(intent)
+
+        return intent_json
+
+    def format_lm_json(self, string):
+        string_without_grave = string.replace("`", "")
+        print(string_without_grave)
+
+        anti_hallucination = self.check_for_json_hallucination(string_without_grave)
+
+        string_as_json = self.string_to_json(anti_hallucination)
+
+        return string_as_json
+
+    def check_for_json_hallucination(self, string):
+        print(string[:5])
+        if string[:6] == "python":
+            string = string.replace("python", "")
+        else:
+            string = string.replace("json", "")
+
+        print(string)
+        return string
