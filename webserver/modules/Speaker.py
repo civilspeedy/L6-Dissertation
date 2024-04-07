@@ -44,6 +44,11 @@ class Speaker(Api):
                 response += chunk.choices[0].delta.content
         return response
 
+    def basic_conversation(self, user_message, user_name):
+        prompt = f"""You will not refer to yourself as gemma. Here is the user's message: {user_message}.
+        There name is: {user_name}. Please respond to them in a polite manor."""
+        return self.send_to_lm(prompt=prompt)
+
     def gainIntent(self, userRequest):
         # intent = self.send_to_lm(
         #   f"""This is the user's request: '{userRequest}'.

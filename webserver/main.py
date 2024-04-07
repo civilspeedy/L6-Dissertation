@@ -1,4 +1,5 @@
 from email import message
+import json
 from flask import Flask, jsonify, make_response, request
 
 from modules.Geocoding import Geocoding
@@ -11,29 +12,27 @@ vc = Visual_Crossing()
 om = Open_Metro()
 locIq = Geocoding()
 
-
-@app.route("/")
-def hello():
-    # authorisation needs to be set up
-    print("Someone has connected")
-    return "Test Message"
+name = " "
 
 
-# @app.route("/api/userMessage", methods=["GET", "POST"])
-def user_message():
-    # string = request.args.get("message")
+@app.route("/communicate", methods=["POST", "GET"])
+def communicate():
+    message = request.args.get("message")
+    print(message)
 
-    intent = speaker.gainIntent(message)
-    location_longLat = locIq.default(intent["location"])
+    name = request.args.get("name")
+    print(name)
 
-    vc_report = vc.request_forecast(
-        intent["start_date"], intent["end_date"], intent["location"]
+    return make_response(
+        jsonify(
+            {
+                "response": speaker.basic_conversation(
+                    user_name=name, user_message=message
+                )
+            },
+            200,
+        )
     )
-    print(vc_report)
-
-    # if string == "":
-    # return make_response(jsonify({"result": "no input"}, 400))
-    # return make_response(jsonify({"result": "ok"}, 200))
 
 
 def run_local():
@@ -45,4 +44,4 @@ def run_on_network():
 
 
 if __name__ == "__main__":
-    user_message()
+    run_local()
