@@ -1,4 +1,5 @@
 import datetime
+import json
 import string
 from openai import OpenAI
 
@@ -44,28 +45,38 @@ class Speaker(Api):
                 response += chunk.choices[0].delta.content
         return response
 
-    def basic_conversation(self, user_message, user_name):
-        prompt = f"""You will not refer to yourself as gemma. Here is the user's message: {user_message}.
-        There name is: {user_name}. Please respond to them in a polite manor."""
-        return self.send_to_lm(prompt=prompt)
+    def what_does_user_want(self, user_message):
+        json_template = """
+{
+    weather_report: {
+        requested: boolean,
+        start_date: string,
+        end_date: string,
+        specific_day: string,
+        specific_time: string,
+        temperature_avg: boolean,
+        top_temperature: boolean,
+        lowest_temperature: boolean,
+        wind_speed: boolean,
+        air_pollution: boolean,
+        rain_probability: boolean,
+        cloud_coverage: boolean,
+        visibility: boolean,
+        location: string
+    },
+    general_inquiry: {
+        current_time: boolean,
+        today_date: boolean,
+        other: boolean,
+    }
+}
+"""
 
-    def gainIntent(self, userRequest):
-        # intent = self.send_to_lm(
-        #   f"""This is the user's request: '{userRequest}'.
-        # Please return in a json for the starting day and end day they want and the location they want.
-        # In this format:
-        # "start_date": start_date,
-        # "end_date": end_date,
-        # "just_today": boolean,
-        # "location": location
-        # """
-        # )
+        prompt = f"""This is the user's request: {user_message}.
+        Please distill into this json format what they want: {json_template}
+        """
 
-        intent = self.test_string
-        print(intent)
-        intent_json = self.format_lm_json(intent)
-
-        return intent_json
+        return self.format_lm_json(self.send_to_lm(prompt))
 
     def format_lm_json(self, string):
         string_without_grave = string.replace("`", "")

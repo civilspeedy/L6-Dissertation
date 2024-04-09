@@ -21,15 +21,11 @@ def communicate():
     print(message)
 
     name = request.args.get("name")
-    print(name)
 
+    print(speaker.what_does_user_want(message))
     return make_response(
         jsonify(
-            {
-                "response": speaker.basic_conversation(
-                    user_name=name, user_message=message
-                )
-            },
+            {"response": "ok"},
             200,
         )
     )
