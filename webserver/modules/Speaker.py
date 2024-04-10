@@ -1,9 +1,9 @@
 import datetime
-import json
-import string
 from openai import OpenAI
 
 from modules.Api import Api
+from modules.Geocoding import Geocoding
+from modules.Weather import Open_Metro, Visual_Crossing
 
 
 class Speaker(Api):
@@ -13,16 +13,9 @@ class Speaker(Api):
         self.client = OpenAI(
             base_url="https://integrate.api.nvidia.com/v1", api_key=self.get_key("nv")
         )
-        self.test_string = """
-```json
-{
-    "start_date": "2023-10-27",
-    "end_date": "2023-10-27",
-    "just_today": true,
-    "location": "London"
-}
-```
-"""
+        self.open_metro = Open_Metro()
+        self.visual_crossing = Visual_Crossing()
+        self.geocode = Geocoding()
 
     def send_to_lm(self, prompt):
         response = ""
@@ -49,7 +42,9 @@ class Speaker(Api):
         json_template = """
 {
     weather_report: {
-        requested: boolean,
+        weather_report_requested: boolean,
+        general_weather_request: boolean,
+        today: boolean,
         start_date: string,
         end_date: string,
         specific_day: string,
@@ -57,26 +52,69 @@ class Speaker(Api):
         temperature_avg: boolean,
         top_temperature: boolean,
         lowest_temperature: boolean,
+        feels_like_temperature,
         wind_speed: boolean,
-        air_pollution: boolean,
-        rain_probability: boolean,
+        uv_index: boolean,
+        rain: boolean,
         cloud_coverage: boolean,
         visibility: boolean,
         location: string
     },
     general_inquiry: {
         current_time: boolean,
-        today_date: boolean,
+        todays_date: boolean,
         other: boolean,
     }
 }
 """
 
         prompt = f"""This is the user's request: {user_message}.
-        Please distill into this json format what they want: {json_template}
+        Please distill into this json format what they want: {json_template}.
         """
 
-        return self.format_lm_json(self.send_to_lm(prompt))
+        self.fulfil_request(self.format_lm_json(self.send_to_lm(prompt)))
+
+    def fulfil_request(self, want_json):
+        # needs return
+        # https://www.w3schools.com/python/ref_dictionary_items.asp
+        wants = []
+        if want_json is not None:
+            for topic, sub_topic in want_json.items():
+                for item_key, item in sub_topic.items():
+                    if item:
+                        wants.append(item_key)
+
+            if want_json["weather_report"]["weather_report_requested"]:
+                weather_wants = want_json["weather_report"]
+
+                if weather_wants["location"] is not None:
+                    long_and_lat = self.geocode.default(weather_wants["location"])
+                    long = long_and_lat[0]
+                    lat = long_and_lat[1]
+
+                    if weather_wants["today"]:
+                        start_date = datetime.date.today()
+                        end_date = start_date
+
+                    if weather_wants["today"] is not True:
+                        start_date = weather_wants["start_date"]
+                        end_date = weather_wants["end_date"]
+
+                    open_metro_report = self.open_metro.request_forecast(
+                        long=long,
+                        lat=lat,
+                        what_user_wants=wants,
+                        start_date=start_date,
+                        end_date=end_date,
+                    )
+
+                    # need visual crossing report here
+                    visual_crossing_report = self.visual_crossing.request_forecast(
+                        start_date=start_date,
+                        end_date=end_date,
+                        location=weather_wants["location"],
+                        what_user_wants="temp",
+                    )
 
     def format_lm_json(self, string):
         string_without_grave = string.replace("`", "")

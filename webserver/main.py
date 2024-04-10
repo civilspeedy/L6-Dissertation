@@ -1,18 +1,11 @@
-from email import message
-import json
 from flask import Flask, jsonify, make_response, request
 
-from modules.Geocoding import Geocoding
+
 from modules.Speaker import Speaker
-from modules.Weather import Open_Metro, Visual_Crossing
+
 
 app = Flask(__name__)
 speaker = Speaker()
-vc = Visual_Crossing()
-om = Open_Metro()
-locIq = Geocoding()
-
-name = " "
 
 
 @app.route("/communicate", methods=["POST", "GET"])
@@ -22,7 +15,9 @@ def communicate():
 
     name = request.args.get("name")
 
-    print(speaker.what_does_user_want(message))
+    speaker.fulfil_request(
+        speaker.what_does_user_want(message)
+    )  # don't forget about this
     return make_response(
         jsonify(
             {"response": "ok"},
