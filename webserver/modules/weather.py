@@ -56,6 +56,34 @@ class Visual_Crossing(Api):
         response = self.send_request(url)
         report = str(response).replace('\\"', '"')
         print("visual crossing: ", report)
+
+        report_json = self.string_to_json(report)
+        days = report_json["days"]
+
+        for x in what_user_wants:
+            match x:
+                case "general_weather_request":
+                    pass
+                    break
+                case "top_temperature":
+                    pass
+                case "lowest_temperature":
+                    pass
+                case "temperature_avg":
+                    pass
+                case "feels_like_temperature":
+                    pass
+                case "wind_speed":
+                    pass
+                case "uv_index":
+                    pass
+                case "rain":
+                    pass
+                case "cloud_coverage":
+                    pass
+                case "visibility":
+                    pass
+
         return report  # needs system to get specific data
 
     def get_date(self, today, days):
