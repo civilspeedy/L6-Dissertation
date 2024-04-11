@@ -52,18 +52,19 @@ class Visual_Crossing(Api):
         self.key = self.get_key("vc")
 
     def request_forecast(self, start_date, end_date, location, what_user_wants):
+        print("start:", start_date, " end:", end_date)
         url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{location}/{start_date}/{end_date}?unitGroup=metric&key={self.key}&contentType=json"
         response = self.send_request(url)
         report = str(response).replace('\\"', '"')
-        print("visual crossing: ", report)
+        print("type of date: ", type(start_date))
 
         report_json = self.string_to_json(report)
         days = report_json["days"]
+        wants = []
 
         for x in what_user_wants:
             match x:
                 case "general_weather_request":
-                    pass
                     break
                 case "top_temperature":
                     pass
@@ -85,6 +86,3 @@ class Visual_Crossing(Api):
                     pass
 
         return report  # needs system to get specific data
-
-    def get_date(self, today, days):
-        return today + datetime.timedelta(days=days)

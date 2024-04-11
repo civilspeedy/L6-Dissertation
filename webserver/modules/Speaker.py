@@ -44,7 +44,7 @@ class Speaker(Api):
     weather_report: {
         weather_report_requested: boolean,
         general_weather_request: boolean,
-        today: boolean,
+        forecast_for_todays_date: boolean,
         start_date: string,
         end_date: string,
         specific_day: string,
@@ -62,14 +62,15 @@ class Speaker(Api):
     },
     general_inquiry: {
         current_time: boolean,
-        todays_date: boolean,
+        tell_todays_date: boolean,
         other: boolean,
     }
 }
 """
 
         prompt = f"""This is the user's request: {user_message}.
-        Please distill into this json format what they want: {json_template}.
+        Please distill into this json format what they want: {json_template}. 
+        If they have stated another day forecast_for_todays_date must be false.
         """
 
         self.fulfil_request(self.format_lm_json(self.send_to_lm(prompt)))
@@ -92,13 +93,19 @@ class Speaker(Api):
                     long = long_and_lat[0]
                     lat = long_and_lat[1]
 
-                    if weather_wants["today"]:
+                    if weather_wants["forecast_for_todays_date"]:
                         start_date = datetime.date.today()
                         end_date = start_date
 
-                    if weather_wants["today"] is not True:
-                        start_date = weather_wants["start_date"]
-                        end_date = weather_wants["end_date"]
+                    if weather_wants["forecast_for_todays_date"] is not True:
+                        match weather_wants["specific_day"]:
+                            case "tomorrow":
+                                start_date = self.get_date(datetime.date.today(), 1)
+                                end_date = start_date
+
+                            case _:
+                                start_date = weather_wants["start_date"]
+                                end_date = weather_wants["end_date"]
 
                     open_metro_report = self.open_metro.request_forecast(
                         long=long,

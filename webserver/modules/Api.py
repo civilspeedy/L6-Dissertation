@@ -1,6 +1,9 @@
+from calendar import MONDAY
+import calendar
 import os
 import requests
 import json
+import datetime
 
 
 class Api:
@@ -135,9 +138,19 @@ class Api:
 
     def format_report(self):
         json = self.read_from_json(None)
-        # not sure if nessisary
+        # not sure if necessary
 
         if json is not None:
             for item in json:
                 if isinstance(item, dict):
                     print(item["open metro"]["hourly"]["apparent_temperature"])
+
+    def get_date(self, today, days):
+        return today + datetime.timedelta(days=days)
+
+    def get_next_day_from_name(self, day_name):
+        today = datetime.date.today()
+        for i in range(14):
+            date = self.get_date(today=today, days=i)
+            if calendar.day_name[date.weekday()] == day_name:
+                return date
