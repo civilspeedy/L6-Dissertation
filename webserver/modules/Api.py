@@ -1,6 +1,5 @@
-from calendar import MONDAY
-import calendar
 import os
+import calendar
 import requests
 import json
 import datetime

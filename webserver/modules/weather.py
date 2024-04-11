@@ -1,7 +1,3 @@
-import datetime
-
-from networkx import interval_graph
-from numpy import info
 from modules.Api import Api
 
 
@@ -54,6 +50,7 @@ class Visual_Crossing(Api):
     def request_forecast(self, start_date, end_date, location, what_user_wants):
         print("start:", start_date, " end:", end_date)
         url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{location}/{start_date}/{end_date}?unitGroup=metric&key={self.key}&contentType=json"
+        print("url: ", url)
         response = self.send_request(url)
         report = str(response).replace('\\"', '"')
         print("type of date: ", type(start_date))
@@ -65,7 +62,7 @@ class Visual_Crossing(Api):
         for x in what_user_wants:
             match x:
                 case "general_weather_request":
-                    break
+                    pass
                 case "top_temperature":
                     pass
                 case "lowest_temperature":

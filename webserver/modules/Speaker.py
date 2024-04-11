@@ -48,6 +48,7 @@ class Speaker(Api):
         start_date: string,
         end_date: string,
         specific_day: string,
+        specific_days: List<String>,
         specific_time: string,
         temperature_avg: boolean,
         top_temperature: boolean,
@@ -71,14 +72,18 @@ class Speaker(Api):
         prompt = f"""This is the user's request: {user_message}.
         Please distill into this json format what they want: {json_template}. 
         If they have stated another day forecast_for_todays_date must be false.
+        If they have asked for today's weather forecast_for_todays_date must be true.
+        If they have asked just for the weather then general_weather_request must be true.
         """
-
-        self.fulfil_request(self.format_lm_json(self.send_to_lm(prompt)))
+        lm_response = self.send_to_lm(prompt)
+        print(lm_response)
+        self.fulfil_request(self.format_lm_json(lm_response))
 
     def fulfil_request(self, want_json):
         # needs return
         # https://www.w3schools.com/python/ref_dictionary_items.asp
-        wants = []
+        start_date, end_date, days_wanted, wants = None, None, [], []
+
         if want_json is not None:
             for topic, sub_topic in want_json.items():
                 for item_key, item in sub_topic.items():
@@ -98,30 +103,54 @@ class Speaker(Api):
                         end_date = start_date
 
                     if weather_wants["forecast_for_todays_date"] is not True:
-                        match weather_wants["specific_day"]:
-                            case "tomorrow":
+                        if weather_wants["specific_days"] is []:
+                            if weather_wants["specific_day"] == "tomorrow":
                                 start_date = self.get_date(datetime.date.today(), 1)
                                 end_date = start_date
 
-                            case _:
-                                start_date = weather_wants["start_date"]
-                                end_date = weather_wants["end_date"]
+                            if weather_wants["specific_day"] in (
+                                "Monday",
+                                "Tuesday",
+                                "Wednesday",
+                                "Thursday",
+                                "Friday",
+                                "Saturday",
+                                "Sunday",
+                            ):
+                                start_date = self.get_next_day_from_name(
+                                    weather_wants["specific_day"]
+                                )
+                                end_date = start_date
+                        print("specific days = ", weather_wants["specific_days"])
+                        if weather_wants["specific_days"] != []:
+                            specific_days = weather_wants[
+                                "specific_days"
+                            ]  # may be needed later on
+                            for day in specific_days:
+                                days_wanted.append(self.get_next_day_from_name(day))
 
-                    open_metro_report = self.open_metro.request_forecast(
-                        long=long,
-                        lat=lat,
-                        what_user_wants=wants,
-                        start_date=start_date,
-                        end_date=end_date,
-                    )
+                            start_date = self.get_next_day_from_name(specific_days[0])
+                            end_date = self.get_next_day_from_name(specific_days[-1])
+                    else:
+                        start_date = weather_wants["start_date"]
+                        end_date = weather_wants["end_date"]
 
-                    # need visual crossing report here
-                    visual_crossing_report = self.visual_crossing.request_forecast(
-                        start_date=start_date,
-                        end_date=end_date,
-                        location=weather_wants["location"],
-                        what_user_wants="temp",
-                    )
+        open_metro_report = self.open_metro.request_forecast(
+            long=long,
+            lat=lat,
+            what_user_wants=wants,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        print(open_metro_report)
+
+        # need visual crossing report here
+        visual_crossing_report = self.visual_crossing.request_forecast(
+            start_date=start_date,
+            end_date=end_date,
+            location=weather_wants["location"],
+            what_user_wants="temp",
+        )
 
     def format_lm_json(self, string):
         string_without_grave = string.replace("`", "")
