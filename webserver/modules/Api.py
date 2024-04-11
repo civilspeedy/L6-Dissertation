@@ -144,12 +144,46 @@ class Api:
                 if isinstance(item, dict):
                     print(item["open metro"]["hourly"]["apparent_temperature"])
 
-    def get_date(self, today, days):
+    def today_plus(self, today, days):
         return today + datetime.timedelta(days=days)
 
     def get_next_day_from_name(self, day_name):
         today = datetime.date.today()
-        for i in range(14):
+        for i in range(7):
             date = self.get_date(today=today, days=i)
             if calendar.day_name[date.weekday()] == day_name:
                 return date
+
+    def check_if_named_day(self, day):
+        if day in calendar.day_name:
+            return True
+
+    def get_specific_days(self, specific_days):
+        named_days = []
+        start_date = None
+        end_date = None
+        today = datetime.date.today()
+
+        for specific_day in specific_days:  # e.g. monday
+            if self.check_if_named_day(specific_day):
+                named_days.append(self.get_next_day_from_name(specific_day))
+
+        if named_days != []:
+            start_date, end_date = named_days[0], named_days[1]
+
+        if len(specific_days) == 1:
+            specific_day = specific_days
+            if self.check_if_named_day(specific_day):
+                start_date = self.get_next_day_from_name(specific_day)
+            if specific_day in ("today", "Today"):
+                start_date = today
+            if specific_day in ("tomorrow", "Tomorrow"):
+                start_date = self.today_plus(today, 1)
+
+            end_date = start_date
+
+            if specific_day in ("weekend", "Weekend"):
+                start_date = self.get_next_day_from_name("Saturday")
+                end_date = self.get_next_day_from_name("Sunday")
+
+        return [start_date, end_date, named_days]

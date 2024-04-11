@@ -1,4 +1,3 @@
-import datetime
 from openai import OpenAI
 
 from modules.Api import Api
@@ -44,10 +43,6 @@ class Speaker(Api):
     weather_report: {
         weather_report_requested: boolean,
         general_weather_request: boolean,
-        forecast_for_todays_date: boolean,
-        start_date: string,
-        end_date: string,
-        specific_day: string,
         specific_days: List<String>,
         specific_time: string,
         temperature_avg: boolean,
@@ -74,66 +69,34 @@ class Speaker(Api):
         If they have stated another day forecast_for_todays_date must be false.
         If they have asked for today's weather forecast_for_todays_date must be true.
         If they have asked just for the weather then general_weather_request must be true.
+        If they have asked for the weather over a period of time e.g. the weekend, please put that in the specific_days array.
+        Do not give an explanation.
         """
         lm_response = self.send_to_lm(prompt)
         print(lm_response)
         self.fulfil_request(self.format_lm_json(lm_response))
 
     def fulfil_request(self, want_json):
-        # needs return
         # https://www.w3schools.com/python/ref_dictionary_items.asp
-        start_date, end_date, days_wanted, wants = None, None, [], []
+        wants = []
+        other_wants_list = []
 
-        if want_json is not None:
-            for topic, sub_topic in want_json.items():
-                for item_key, item in sub_topic.items():
-                    if item:
-                        wants.append(item_key)
+        # avoid heavy nesting at all costs
 
-            if want_json["weather_report"]["weather_report_requested"]:
-                weather_wants = want_json["weather_report"]
+        weather_wants = want_json["weather_report"]
+        other_wants = want_json["general_inquiry"]
 
-                if weather_wants["location"] is not None:
-                    long_and_lat = self.geocode.default(weather_wants["location"])
-                    long = long_and_lat[0]
-                    lat = long_and_lat[1]
+        if weather_wants["weather_report_requested"]:
+            for item in weather_wants.items():
+                if item:
+                    wants.append(item)
 
-                    if weather_wants["forecast_for_todays_date"]:
-                        start_date = datetime.date.today()
-                        end_date = start_date
+            days = self.get_specific_days(weather_wants["specific_days"])
 
-                    if weather_wants["forecast_for_todays_date"] is not True:
-                        if weather_wants["specific_days"] is []:
-                            if weather_wants["specific_day"] == "tomorrow":
-                                start_date = self.get_date(datetime.date.today(), 1)
-                                end_date = start_date
-
-                            if weather_wants["specific_day"] in (
-                                "Monday",
-                                "Tuesday",
-                                "Wednesday",
-                                "Thursday",
-                                "Friday",
-                                "Saturday",
-                                "Sunday",
-                            ):
-                                start_date = self.get_next_day_from_name(
-                                    weather_wants["specific_day"]
-                                )
-                                end_date = start_date
-                        print("specific days = ", weather_wants["specific_days"])
-                        if weather_wants["specific_days"] != []:
-                            specific_days = weather_wants[
-                                "specific_days"
-                            ]  # may be needed later on
-                            for day in specific_days:
-                                days_wanted.append(self.get_next_day_from_name(day))
-
-                            start_date = self.get_next_day_from_name(specific_days[0])
-                            end_date = self.get_next_day_from_name(specific_days[-1])
-                    else:
-                        start_date = weather_wants["start_date"]
-                        end_date = weather_wants["end_date"]
+        else:
+            for item in other_wants.items():
+                if item:
+                    other_wants_list.append(item)
 
         open_metro_report = self.open_metro.request_forecast(
             long=long,

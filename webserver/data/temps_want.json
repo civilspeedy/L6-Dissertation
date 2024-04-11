@@ -1,0 +1,23 @@
+{
+  "weather_report": {
+    "weather_report_requested": true,
+    "general_weather_request": true,
+    "specific_days": ["weekend"],
+    "specific_time": null,
+    "temperature_avg": false,
+    "top_temperature": false,
+    "lowest_temperature": false,
+    "feels_like_temperature": false,
+    "wind_speed": false,
+    "uv_index": false,
+    "rain": false,
+    "cloud_coverage": false,
+    "visibility": false,
+    "location": "Bournemouth"
+  },
+  "general_inquiry": {
+    "current_time": false,
+    "tell_todays_date": true,
+    "other": false
+  }
+}
