@@ -35,7 +35,8 @@ class Open_Metro(Api):
         print("info_string: ", info_string)
         if info_string[-1] == ",":
             info_string = info_string[:-1]
-
+        print("lat:", lat)
+        print("long:", long)
         url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={long}&hourly={info_string}&start_date={start_date}&end_date={end_date}"
         return self.send_request(url)
 
@@ -46,6 +47,7 @@ class Visual_Crossing(Api):
     ):
         super().__init__()
         self.key = self.get_key("vc")
+        self.report = None
 
     def request_forecast(self, start_date, end_date, location, what_user_wants):
         # not done COME BACK TO THIS
@@ -57,30 +59,8 @@ class Visual_Crossing(Api):
         print("type of date: ", type(start_date))
 
         report_json = self.string_to_json(report)
-        days = report_json["days"]
-        wants = []
 
-        for x in what_user_wants:
-            match x:
-                case "general_weather_request":
-                    pass
-                case "top_temperature":
-                    pass
-                case "lowest_temperature":
-                    pass
-                case "temperature_avg":
-                    pass
-                case "feels_like_temperature":
-                    pass
-                case "wind_speed":
-                    pass
-                case "uv_index":
-                    pass
-                case "rain":
-                    pass
-                case "cloud_coverage":
-                    pass
-                case "visibility":
-                    pass
+        return report_json
 
-        return report  # needs system to get specific data
+    def search_report(self, search_item):
+        pass

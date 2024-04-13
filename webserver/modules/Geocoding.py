@@ -11,19 +11,26 @@ class Geocoding(Api):
         return self.string_to_json(self.send_request(url))
 
     def default(self, location_name):
+        print("location_name: ", location_name)
         print("Getting lat and long from name...")
         url = f"https://us1.locationiq.com/v1/search?key={self.key}&q={self.format_for_request(location_name)}&format=json&"
-        return self.get_long_lat(self.string_to_json(self.send_request(url)))
+        response = self.string_to_json(self.send_request(url))
+        print("geocoding url: ", url)
+        return self.get_long_lat(response)
 
     def format_for_request(self, location_name):
         print("Formatting name for api request...")
         if " " in location_name:
-            return location_name.replace(" ", "%20")
+            formatted_location = location_name.replace(" ", "%20")
         else:
-            return location_name
+            formatted_location = location_name
+        formatted_location += "%20United%20Kingdom"
+        return formatted_location
 
     def get_long_lat(self, json):
         print("Putting lat and long into array...")
         long = float(json[0]["lon"])
         lat = float(json[0]["lat"])
-        return [long, lat]
+        value = [long, lat]
+        print("latlong: ", value)
+        return value

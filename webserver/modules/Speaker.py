@@ -17,6 +17,7 @@ class Speaker(Api):
         self.geocode = Geocoding()
 
     def send_to_lm(self, prompt):
+        print("prompt: ", prompt)
         print("Giving message to LM...")
         response = ""
         request = self.client.chat.completions.create(
@@ -46,7 +47,7 @@ class Speaker(Api):
         weather_report_requested: boolean,
         general_weather_request: boolean,
         specific_days: List<String>,
-        specific_time: string,
+        specific_time: [hh, mm],
         temperature_avg: boolean,
         top_temperature: boolean,
         lowest_temperature: boolean,
@@ -65,51 +66,61 @@ class Speaker(Api):
         Please distill into this json format what they want: {json_template}. 
         If they have asked just for the weather then general_weather_request must be true.
         Values like 'today', 'weekend', 'thursday' go in specific_days.
+        Specific_days must have a value.
         If they have asked for a weather report all values in general_inquiry must be false.
-        Do not give an explanation.
+        Specific_time refers to time of day, not the day itself. 
+        If the user has not said what day they'd like, set specific_day to 'today'.
+        Do not give an explanation. 
         """
         lm_response = self.send_to_lm(prompt)
         print(lm_response)
-        self.fulfil_request(self.format_lm_json(lm_response))
+        return self.format_lm_json(lm_response)
 
-    def fulfil_request(self, want_json):
+    def fulfil_request(self, want_json, user_message):
         print("Fulfilling User's Request...")
         # https://www.w3schools.com/python/ref_dictionary_items.asp
         wants = []
         other_wants_list = []
         # avoid heavy nesting at all costs
+        print("want_json: ", want_json)
+        if want_json is not None:
+            weather_wants = want_json["weather_report"]
 
-        weather_wants = want_json["weather_report"]
+            if weather_wants["weather_report_requested"]:
+                for key, item in weather_wants.items():
+                    if item:
+                        wants.append(key)
 
-        if weather_wants["weather_report_requested"]:
-            for key, item in weather_wants.items():
-                if item:
-                    wants.append(key)
+                days = self.get_specific_days(weather_wants["specific_days"])
+                start_date = days[0]
+                end_date = days[1]
 
-            days = self.get_specific_days(weather_wants["specific_days"])
-            start_date = days[0]
-            end_date = days[1]
+                location = self.geocode.default(weather_wants["location"])
+                print("location: ", location)
+                long = location[0]
+                lat = location[1]
 
-            location = self.geocode.default(weather_wants["location"])
-            long = location[0]
-            lat = location[0]
+                open_metro_report = self.open_metro.request_forecast(
+                    long=long,
+                    lat=lat,
+                    what_user_wants=wants,
+                    start_date=start_date,
+                    end_date=end_date,
+                )
+                print("open_metro_report: ", open_metro_report)
 
-            open_metro_report = self.open_metro.request_forecast(
-                long=long,
-                lat=lat,
-                what_user_wants=wants,
-                start_date=start_date,
-                end_date=end_date,
-            )
-            print("open_metro_report: ", open_metro_report)
-
-            visual_crossing_report = self.visual_crossing.request_forecast(
-                start_date=start_date,
-                end_date=end_date,
-                location=weather_wants["location"],
-                what_user_wants=wants,
-            )
-            print("visual_crossing_report: ", visual_crossing_report)
+                visual_crossing_report = self.visual_crossing.request_forecast(
+                    start_date=start_date,
+                    end_date=end_date,
+                    location=weather_wants["location"],
+                    what_user_wants=wants,
+                )
+                print("visual_crossing_report: ", visual_crossing_report)
+            return self.send_to_lm(f"""
+Here is the user's request: {user_message}.
+Here is the information needed for that request: {open_metro_report}.
+Please relay this information to the user in a polite and understandable manor.
+""")
 
     def format_lm_json(self, string):
         print("Formatting the lm's json...")
@@ -123,6 +134,7 @@ class Speaker(Api):
 
     def check_for_json_hallucination(self, string):
         print("Checking for hallucinations...")
+        print("string: ", string)
         if string[:6] == "python":
             string = string.replace("python", "")
         else:

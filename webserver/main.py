@@ -10,17 +10,18 @@ speaker = Speaker()
 
 @app.route("/communicate", methods=["POST", "GET"])
 def communicate():
+    print("Received message... ")
     message = request.args.get("message")
     print(message)
 
     name = request.args.get("name")
 
-    speaker.fulfil_request(
-        speaker.what_does_user_want(message)
+    response = speaker.fulfil_request(
+        speaker.what_does_user_want(message), message
     )  # don't forget about this
     return make_response(
         jsonify(
-            {"response": "ok"},
+            {"response": response},
             200,
         )
     )
