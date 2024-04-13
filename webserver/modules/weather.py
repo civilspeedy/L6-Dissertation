@@ -48,6 +48,7 @@ class Visual_Crossing(Api):
         self.key = self.get_key("vc")
 
     def request_forecast(self, start_date, end_date, location, what_user_wants):
+        # not done COME BACK TO THIS
         print("start:", start_date, " end:", end_date)
         url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{location}/{start_date}/{end_date}?unitGroup=metric&key={self.key}&contentType=json"
         print("url: ", url)

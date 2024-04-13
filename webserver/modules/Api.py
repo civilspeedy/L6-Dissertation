@@ -38,6 +38,7 @@ class Api:
 
         Returns:
         - Dict: the string now as a dict."""
+        print("Converting string to json/dict...")
         return json.loads(string)
 
     def get_key(self, service_name):
@@ -150,7 +151,7 @@ class Api:
     def get_next_day_from_name(self, day_name):
         today = datetime.date.today()
         for i in range(7):
-            date = self.get_date(today=today, days=i)
+            date = self.today_plus(today=today, days=i)
             if calendar.day_name[date.weekday()] == day_name:
                 return date
 
@@ -159,6 +160,7 @@ class Api:
             return True
 
     def get_specific_days(self, specific_days):
+        print("Getting day for report...")
         named_days = []
         start_date = None
         end_date = None
@@ -169,14 +171,16 @@ class Api:
                 named_days.append(self.get_next_day_from_name(specific_day))
 
         if named_days != []:
-            start_date, end_date = named_days[0], named_days[1]
+            start_date, end_date = named_days[0], named_days[-1]
 
         if len(specific_days) == 1:
-            specific_day = specific_days
+            specific_day = specific_days[0]
             if self.check_if_named_day(specific_day):
                 start_date = self.get_next_day_from_name(specific_day)
+
             if specific_day in ("today", "Today"):
                 start_date = today
+
             if specific_day in ("tomorrow", "Tomorrow"):
                 start_date = self.today_plus(today, 1)
 
