@@ -17,7 +17,6 @@ class Speaker(Api):
         self.geocode = Geocoding()
 
     def send_to_lm(self, prompt):
-        print("prompt: ", prompt)
         print("Giving message to LM...")
         response = ""
         request = self.client.chat.completions.create(
@@ -107,20 +106,22 @@ class Speaker(Api):
                     start_date=start_date,
                     end_date=end_date,
                 )
-                print("open_metro_report: ", open_metro_report)
 
                 visual_crossing_report = self.visual_crossing.request_forecast(
                     start_date=start_date,
                     end_date=end_date,
                     location=weather_wants["location"],
-                    what_user_wants=wants,
                 )
-                print("visual_crossing_report: ", visual_crossing_report)
+
+            self.visual_crossing.search_report("visibility")
             return self.send_to_lm(f"""
 Here is the user's request: {user_message}.
 Here is the information needed for that request: {open_metro_report}.
-Please relay this information to the user in a polite and understandable manor.
+Please relay this information to the user in a short, polite and understandable manor.
 """)
+        return self.send_to_lm(
+            "Please relay a message to the user, explaining that you are unable to perform the action."
+        )
 
     def format_lm_json(self, string):
         print("Formatting the lm's json...")
@@ -134,7 +135,6 @@ Please relay this information to the user in a polite and understandable manor.
 
     def check_for_json_hallucination(self, string):
         print("Checking for hallucinations...")
-        print("string: ", string)
         if string[:6] == "python":
             string = string.replace("python", "")
         else:

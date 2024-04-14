@@ -16,6 +16,7 @@ class Api:
         )
 
     def send_request(self, url):
+        print("Sending Request... ", url)
         """Method for sending http requests using passed url and returns data in wrapped in string.
 
         Parameters:

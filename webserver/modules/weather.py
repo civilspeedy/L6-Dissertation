@@ -7,8 +7,9 @@ class Open_Metro(Api):
         super().__init__()
 
     def request_forecast(self, long, lat, what_user_wants, start_date, end_date):
-        print("what user wants: ", what_user_wants)
+        print("Requesting forecast from open metro...")
         info_string = ""
+
         for x in what_user_wants:
             match x:
                 case "general_weather_request":
@@ -32,12 +33,12 @@ class Open_Metro(Api):
                     info_string += "cloud_cover,"
                 case "visibility":
                     info_string += "visibility,"
-        print("info_string: ", info_string)
+
         if info_string[-1] == ",":
             info_string = info_string[:-1]
-        print("lat:", lat)
-        print("long:", long)
+
         url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={long}&hourly={info_string}&start_date={start_date}&end_date={end_date}"
+
         return self.send_request(url)
 
 
@@ -49,18 +50,41 @@ class Visual_Crossing(Api):
         self.key = self.get_key("vc")
         self.report = None
 
-    def request_forecast(self, start_date, end_date, location, what_user_wants):
+    def request_forecast(self, start_date, end_date, location):
         # not done COME BACK TO THIS
-        print("start:", start_date, " end:", end_date)
+        print("Requesting forecast from visual crossing...")
         url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{location}/{start_date}/{end_date}?unitGroup=metric&key={self.key}&contentType=json"
-        print("url: ", url)
+
         response = self.send_request(url)
         report = str(response).replace('\\"', '"')
-        print("type of date: ", type(start_date))
 
-        report_json = self.string_to_json(report)
+        self.report = self.string_to_json(report)
 
-        return report_json
+        return self.report
 
     def search_report(self, search_item):
-        pass
+        print("Searching for specific item...")
+        key = ""
+        if self.report is not None:
+            match search_item:
+                case "temperature":
+                    key = "temp"
+                case "feels like temp":
+                    key = "feelslike"
+                case "wind speed":
+                    key = "windspeed"
+                case "uv index":
+                    key = "uvindex"
+                case "rain":
+                    key = "precip"
+                case "time":
+                    key = "datetime"
+                case "cloud cover":
+                    key = "cloudcover"
+                case "visibility":
+                    key = "visibility"
+
+            for day in self.report["days"]:
+                # hmm not sure how to format this
+                for key in day:
+                    print(day["key"])

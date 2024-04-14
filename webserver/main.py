@@ -12,7 +12,6 @@ speaker = Speaker()
 def communicate():
     print("Received message... ")
     message = request.args.get("message")
-    print(message)
 
     name = request.args.get("name")
 
