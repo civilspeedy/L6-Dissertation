@@ -1,3 +1,4 @@
+import datetime
 from openai import OpenAI
 
 from modules.Api import Api
@@ -17,7 +18,7 @@ class Speaker(Api):
         self.geocode = Geocoding()
 
     def send_to_lm(self, prompt):
-        print("Giving message to LM...")
+        print("Giving message to LM...\n")
         response = ""
         request = self.client.chat.completions.create(
             model="google/gemma-7b",
@@ -39,7 +40,7 @@ class Speaker(Api):
         return response
 
     def what_does_user_want(self, user_message):
-        print("Figuring out what the user wants...")
+        print("Figuring out what the user wants...\n")
         json_template = """
 
     weather_report: {
@@ -68,7 +69,7 @@ class Speaker(Api):
         Specific_days must have a value.
         If they have asked for a weather report all values in general_inquiry must be false.
         Specific_time refers to time of day, not the day itself. 
-        If the user has not said what day they'd like, set specific_day to 'today'.
+        If not specified specific_day defaults to today.
         Do not give an explanation. 
         """
         lm_response = self.send_to_lm(prompt)
@@ -76,7 +77,7 @@ class Speaker(Api):
         return self.format_lm_json(lm_response)
 
     def fulfil_request(self, want_json, user_message):
-        print("Fulfilling User's Request...")
+        print("Fulfilling User's Request...\n")
         # https://www.w3schools.com/python/ref_dictionary_items.asp
         wants = []
         other_wants_list = []
@@ -113,7 +114,10 @@ class Speaker(Api):
                     location=weather_wants["location"],
                 )
 
-            self.visual_crossing.search_report("visibility")
+            self.visual_crossing.search_report(
+                "visibility", datetime.date.today(), "00:00:00"
+            )
+
             return self.send_to_lm(f"""
 Here is the user's request: {user_message}.
 Here is the information needed for that request: {open_metro_report}.
@@ -124,7 +128,7 @@ Please relay this information to the user in a short, polite and understandable 
         )
 
     def format_lm_json(self, string):
-        print("Formatting the lm's json...")
+        print("Formatting the lm's json...\n")
         string_without_grave = string.replace("`", "")
 
         anti_hallucination = self.check_for_json_hallucination(string_without_grave)
@@ -134,7 +138,7 @@ Please relay this information to the user in a short, polite and understandable 
         return string_as_json
 
     def check_for_json_hallucination(self, string):
-        print("Checking for hallucinations...")
+        print("Checking for hallucinations...\n")
         if string[:6] == "python":
             string = string.replace("python", "")
         else:

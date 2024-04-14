@@ -10,7 +10,7 @@ speaker = Speaker()
 
 @app.route("/communicate", methods=["POST", "GET"])
 def communicate():
-    print("Received message... ")
+    print("Received message...\n")
     message = request.args.get("message")
 
     name = request.args.get("name")

@@ -7,7 +7,7 @@ class Open_Metro(Api):
         super().__init__()
 
     def request_forecast(self, long, lat, what_user_wants, start_date, end_date):
-        print("Requesting forecast from open metro...")
+        print("Requesting forecast from open metro...\n")
         info_string = ""
 
         for x in what_user_wants:
@@ -52,7 +52,7 @@ class Visual_Crossing(Api):
 
     def request_forecast(self, start_date, end_date, location):
         # not done COME BACK TO THIS
-        print("Requesting forecast from visual crossing...")
+        print("Requesting forecast from visual crossing...\n")
         url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{location}/{start_date}/{end_date}?unitGroup=metric&key={self.key}&contentType=json"
 
         response = self.send_request(url)
@@ -62,7 +62,7 @@ class Visual_Crossing(Api):
 
         return self.report
 
-    def search_report(self, search_item):
+    def search_report(self, search_item, date, time):
         print("Searching for specific item...")
         key = ""
         if self.report is not None:
@@ -84,7 +84,18 @@ class Visual_Crossing(Api):
                 case "visibility":
                     key = "visibility"
 
-            for day in self.report["days"]:
-                # hmm not sure how to format this
-                for key in day:
-                    print(day["key"])
+            days = self.report["days"]
+            for day in days:
+                if day["datetime"] == str(date):
+                    hours = day["hours"]
+                    for hour in hours:
+                        if hour["datetime"] == time:
+                            if key in hour:
+                                item = hour[key]
+                                return item
+                            else:
+                                return False
+
+                    return False
+
+            return False

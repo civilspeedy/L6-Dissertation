@@ -39,7 +39,7 @@ class Api:
 
         Returns:
         - Dict: the string now as a dict."""
-        print("Converting string to json/dict...")
+        print("Converting string to json/dict...\n")
         return json.loads(string)
 
     def get_key(self, service_name):
@@ -161,7 +161,7 @@ class Api:
             return True
 
     def get_specific_days(self, specific_days):
-        print("Getting day for report...")
+        print("Getting day for report...\n")
         named_days = []
         start_date = None
         end_date = None
