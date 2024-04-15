@@ -112,12 +112,6 @@ class Speaker(Api):
                     location=weather_wants["location"],
                 )
 
-            print(
-                self.open_metro.get_value(
-                    key="weather code", datetime="2024-04-15T11:00"
-                )
-            )
-
             return self.send_to_lm(f"""
 Here is the user's request: {user_message}.
 Here is the information needed for that request: {open_metro_report}.
