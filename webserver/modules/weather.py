@@ -1,4 +1,3 @@
-from json import load
 from modules.Api import Api
 
 
@@ -85,37 +84,28 @@ class Visual_Crossing(Api):
     def search_report(self, search_item, date, time):
         print("Searching for specific item...")
         key = ""
+
         if self.report is not None:
             match search_item:
-                case "temperature":
+                case "temperature_2m":
                     key = "temp"
-                case "feels like temp":
+                case "apparent_temperature":
                     key = "feelslike"
-                case "wind speed":
+                case "wind_speed_10m":
                     key = "windspeed"
-                case "uv index":
+                case "uv_index":
                     key = "uvindex"
                 case "rain":
                     key = "precip"
-                case "time":
-                    key = "datetime"
-                case "cloud cover":
+                case "cloud_cover":
                     key = "cloudcover"
                 case "visibility":
                     key = "visibility"
-
-            days = self.report["days"]
-            for day in days:
-                if day["datetime"] == str(date):
-                    hours = day["hours"]
-                    for hour in hours:
-                        if hour["datetime"] == time:
-                            if key in hour:
-                                item = hour[key]
-                                return item
-                            else:
-                                return False
-
-                    return False
-
+            if key != "":
+                days = self.report["days"]
+                for day in days:
+                    if day["datetime"] == date:
+                        for time_slot in day["hours"]:
+                            if time_slot["datetime"] == time:
+                                return time_slot[key]
             return False

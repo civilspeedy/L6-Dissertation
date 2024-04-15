@@ -1,3 +1,4 @@
+from datetime import datetime
 from openai import OpenAI
 
 from modules.Api import Api
@@ -56,7 +57,8 @@ class Speaker(Api):
         rain: boolean,
         cloud_coverage: boolean,
         visibility: boolean,
-        location: string
+        location: string,
+        user_has_made_mistake: boolean,
     }
 
 """
@@ -65,10 +67,11 @@ class Speaker(Api):
         Please distill into this json format what they want: {json_template}. 
         If they have asked just for the weather then general_weather_request must be true.
         Values like Today', 'Weekend', 'Thursday' go in specific_days, and have capitalised first letters.
-        Specific_days must have a value.
+        Specific_days cannot be an empty array it must have a value.
         If they have asked for a weather report all values in general_inquiry must be false.
         Specific_time refers to time of day, not the day itself. 
         If not specified specific_day defaults to today.
+        user_has_made_mistake is for only when you cannot figure out a specific part of the user's request.
         Do not give an explanation. 
         """
         lm_response = self.send_to_lm(prompt)
@@ -112,14 +115,19 @@ class Speaker(Api):
                     location=weather_wants["location"],
                 )
 
+            current_time = datetime.now().strftime("%H:%M:%S")
             return self.send_to_lm(f"""
 Here is the user's request: {user_message}.
 Here is the information needed for that request: {open_metro_report}.
+The current time is" {current_time}, only relay this if it is relevant to the user's request.
+Here is is a list that shows where if another source shows a different report: {self.compare_reports}. 
+There is no room for Notes or extra comments, focus on providing the information the user has requested.
 Please relay this information to the user in a short, polite and understandable manor.
 """)
-        return self.send_to_lm(
-            "Please relay a message to the user, explaining that you are unable to perform the action."
-        )
+        else:
+            return self.send_to_lm(
+                "Please relay a message to the user, explaining that you are unable to perform the action."
+            )
 
     def format_lm_json(self, string):
         print("Formatting the lm's json...\n")
@@ -160,8 +168,14 @@ Please relay this information to the user in a short, polite and understandable 
                             time=date_time["time"],
                         )
                         if value[i] != vc_value:
-                            difference.append(
-                                {f"{key}_in_om": value[i], f"{key}_in_vc": vc_value}
-                            )
-                        else:
-                            pass
+                            if vc_value == False:
+                                pass
+                            else:
+                                difference.append(
+                                    {
+                                        "time": {date_time["time"]},
+                                        f"{key}_in_om": value[i],
+                                        f"{key}_in_vc": vc_value,
+                                    }
+                                )
+        return difference

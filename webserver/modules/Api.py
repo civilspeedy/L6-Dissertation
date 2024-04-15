@@ -113,4 +113,4 @@ class Api:
 
     def date_time_conversion(self, date_time):
         date_and_time = date_time.split("T")
-        return {"date": date_and_time[0], "time": date_and_time[1]}
+        return {"date": date_and_time[0], "time": date_and_time[1] + ":00"}
