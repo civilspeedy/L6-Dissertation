@@ -1,4 +1,3 @@
-import datetime
 from openai import OpenAI
 
 from modules.Api import Api
@@ -65,7 +64,7 @@ class Speaker(Api):
         prompt = f"""This is the user's request: {user_message}.
         Please distill into this json format what they want: {json_template}. 
         If they have asked just for the weather then general_weather_request must be true.
-        Values like 'today', 'weekend', 'thursday' go in specific_days.
+        Values like Today', 'Weekend', 'Thursday' go in specific_days, and have capitalised first letters.
         Specific_days must have a value.
         If they have asked for a weather report all values in general_inquiry must be false.
         Specific_time refers to time of day, not the day itself. 
@@ -80,9 +79,8 @@ class Speaker(Api):
         print("Fulfilling User's Request...\n")
         # https://www.w3schools.com/python/ref_dictionary_items.asp
         wants = []
-        other_wants_list = []
+        other_wants_list = []  # <- don't forget about this
         # avoid heavy nesting at all costs
-        print("want_json: ", want_json)
         if want_json is not None:
             weather_wants = want_json["weather_report"]
 
@@ -108,14 +106,16 @@ class Speaker(Api):
                     end_date=end_date,
                 )
 
-                visual_crossing_report = self.visual_crossing.request_forecast(
+                self.visual_crossing.request_forecast(
                     start_date=start_date,
                     end_date=end_date,
                     location=weather_wants["location"],
                 )
 
-            self.visual_crossing.search_report(
-                "visibility", datetime.date.today(), "00:00:00"
+            print(
+                self.open_metro.get_value(
+                    key="weather code", datetime="2024-04-15T11:00"
+                )
             )
 
             return self.send_to_lm(f"""
@@ -145,3 +145,29 @@ Please relay this information to the user in a short, polite and understandable 
             string = string.replace("json", "")
 
         return string
+
+    def compare_reports(self):
+        om_report = self.open_metro.report
+        vc_report = self.visual_crossing.report
+        difference = []
+
+        if om_report is not None and vc_report is not None:
+            for key, value in om_report["hourly"].items():
+                if key == "time":
+                    pass
+                else:
+                    for i in range(len(om_report["hourly"]["time"])):
+                        date_time = self.date_time_conversion(
+                            om_report["hourly"]["time"][i]
+                        )
+                        vc_value = self.visual_crossing.search_report(
+                            search_item=key,
+                            date=date_time["date"],
+                            time=date_time["time"],
+                        )
+                        if value[i] != vc_value:
+                            difference.append(
+                                {f"{key}_in_om": value[i], f"{key}_in_vc": vc_value}
+                            )
+                        else:
+                            pass

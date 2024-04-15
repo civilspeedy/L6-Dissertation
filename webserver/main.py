@@ -35,4 +35,4 @@ def run_on_network():
 
 
 if __name__ == "__main__":
-    run_local()
+    speaker.date_time_conversion("2024-04-19T12:00")

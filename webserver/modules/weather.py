@@ -1,3 +1,4 @@
+from json import load
 from modules.Api import Api
 
 
@@ -5,6 +6,7 @@ class Open_Metro(Api):
     # https://pypi.org/project/requests/
     def __init__(self):
         super().__init__()
+        self.report = None
 
     def request_forecast(self, long, lat, what_user_wants, start_date, end_date):
         print("Requesting forecast from open metro...\n")
@@ -39,7 +41,28 @@ class Open_Metro(Api):
 
         url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={long}&hourly={info_string}&start_date={start_date}&end_date={end_date}"
 
-        return self.send_request(url)
+        self.report = self.string_to_json(self.send_request(url))
+        return self.report
+
+    def get_date_time(self):
+        print("Getting datetimes...\n")
+        date_times = []
+        if self.report is not None:
+            for date_time in self.report["hourly"]["time"]:
+                date_times.append(date_time)
+        return date_times
+
+    def get_value(self, datetime, key):
+        print("Getting specific value...\n")
+
+        if self.report is not None:
+            if self.report["hourly"] is not None:
+                time = self.report["hourly"]["time"]
+                print(time)
+                for i in range(len(time)):
+                    print(time[i], datetime)
+                    if time[i] == datetime:
+                        return self.report["hourly"][key][i]
 
 
 class Visual_Crossing(Api):
@@ -51,7 +74,6 @@ class Visual_Crossing(Api):
         self.report = None
 
     def request_forecast(self, start_date, end_date, location):
-        # not done COME BACK TO THIS
         print("Requesting forecast from visual crossing...\n")
         url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{location}/{start_date}/{end_date}?unitGroup=metric&key={self.key}&contentType=json"
 
@@ -59,8 +81,6 @@ class Visual_Crossing(Api):
         report = str(response).replace('\\"', '"')
 
         self.report = self.string_to_json(report)
-
-        return self.report
 
     def search_report(self, search_item, date, time):
         print("Searching for specific item...")
