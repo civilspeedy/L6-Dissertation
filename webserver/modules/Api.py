@@ -73,7 +73,6 @@ class Api:
 
     def check_if_named_day(self, day):
         for name_of_day in calendar.day_name:
-            print(name_of_day)
             if name_of_day == day:
                 return True
 

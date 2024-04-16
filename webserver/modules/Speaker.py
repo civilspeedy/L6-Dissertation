@@ -69,6 +69,7 @@ class Speaker(Api):
         There name is {name}.
         weather_report_requested can only be true if the user has specifically asked for the weather, 
         if this is not the case, then general_conversation is true (this includes asking the date or time).
+        if weather_report_requested is true, general_conversation must be false.
         If they have asked just for the weather then general_weather_request must be true.
         Values like Today', 'Weekend', 'Thursday' go in specific_days, and have capitalised first letters.
         Specific_days cannot be an empty array it must have a value.
@@ -114,7 +115,6 @@ class Speaker(Api):
                 end_date = days[1]
 
                 location = self.geocode.default(weather_wants["location"])
-                print("location: ", location)
                 long = location[0]
                 lat = location[1]
 
@@ -135,6 +135,7 @@ class Speaker(Api):
                 return self.send_to_lm(f"""
     Here is the user's request: {user_message}.
     Here is the information needed for that request: {open_metro_report}.
+    Do not use ellipses.
     The current time is" {current_time}, only relay this if it is relevant to the user's request.
     Here is is a list that shows where if another source shows a different report: {self.compare_reports}. 
     There is no room for Notes or extra comments, focus on providing the information the user has requested.

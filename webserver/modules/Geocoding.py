@@ -32,5 +32,4 @@ class Geocoding(Api):
         long = float(json[0]["lon"])
         lat = float(json[0]["lat"])
         value = [long, lat]
-        print("latlong: ", value)
         return value
