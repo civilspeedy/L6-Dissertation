@@ -1,5 +1,5 @@
-from calendar import c
 from datetime import datetime, date
+from os import name
 from openai import OpenAI
 
 from modules.Api import Api
@@ -49,7 +49,6 @@ class Speaker(Api):
         weather_report_requested: boolean,
         general_weather_request: boolean,
         specific_days: List<String>,
-        specific_time: [hh, mm],
         temperature_avg: boolean,
         top_temperature: boolean,
         lowest_temperature: boolean,
@@ -67,6 +66,7 @@ class Speaker(Api):
 
         prompt = f"""This is the user's request: {user_message}.
         Please distill into this json format what they want: {json_template}. 
+        There name is {name}.
         weather_report_requested can only be true if the user has specifically asked for the weather, 
         if this is not the case, then general_conversation is true (this includes asking the date or time).
         If they have asked just for the weather then general_weather_request must be true.
@@ -82,11 +82,10 @@ class Speaker(Api):
         print(lm_response)
         return self.format_lm_json(lm_response)
 
-    def fulfil_request(self, want_json, user_message):
+    def fulfil_request(self, want_json, user_message, name):
         print("Fulfilling User's Request...\n")
         # https://www.w3schools.com/python/ref_dictionary_items.asp
         wants = []
-        other_wants_list = []  # <- don't forget about this
         current_time = datetime.now().strftime("%H:%M:%S")
         current_date = date.today()
 
@@ -133,18 +132,18 @@ class Speaker(Api):
                     location=weather_wants["location"],
                 )
 
-            return self.send_to_lm(f"""
-Here is the user's request: {user_message}.
-Here is the information needed for that request: {open_metro_report}.
-The current time is" {current_time}, only relay this if it is relevant to the user's request.
-Here is is a list that shows where if another source shows a different report: {self.compare_reports}. 
-There is no room for Notes or extra comments, focus on providing the information the user has requested.
-Please relay this information to the user in a short, polite and understandable manor.
-""")
+                return self.send_to_lm(f"""
+    Here is the user's request: {user_message}.
+    Here is the information needed for that request: {open_metro_report}.
+    The current time is" {current_time}, only relay this if it is relevant to the user's request.
+    Here is is a list that shows where if another source shows a different report: {self.compare_reports}. 
+    There is no room for Notes or extra comments, focus on providing the information the user has requested.
+    Please relay this information to the user in a short, polite and understandable manor.
+    """)
+            if weather_wants["user_has_made_mistake"]:
+                return self.confuse_message()
         else:
-            return self.send_to_lm(
-                "Please relay a message to the user, explaining that you are unable to perform the action."
-            )
+            return self.error_message()
 
     def format_lm_json(self, string):
         print("Formatting the lm's json...\n")
@@ -186,7 +185,7 @@ Please relay this information to the user in a short, polite and understandable 
                             time=date_time["time"],
                         )
                         if value[i] != vc_value:
-                            if vc_value == False:
+                            if vc_value is False:
                                 pass
                             else:
                                 difference.append(
@@ -197,3 +196,13 @@ Please relay this information to the user in a short, polite and understandable 
                                     }
                                 )
         return difference
+
+    def error_message(self):
+        return self.send_to_lm(
+            "Please explain to that something has gone wrong and suggest that they try again."
+        )
+
+    def confuse_message(self):
+        return self.send_to_lm(
+            "Please explain to the user that you didn't quite understand what they meant, and ask they they try again."
+        )

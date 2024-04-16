@@ -16,7 +16,7 @@ def communicate():
     name = request.args.get("name")
 
     response = speaker.fulfil_request(
-        speaker.what_does_user_want(message), message
+        want_json=speaker.what_does_user_want(message), user_message=message, name=name
     )  # don't forget about this
     return make_response(
         jsonify(
