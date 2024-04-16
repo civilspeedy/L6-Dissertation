@@ -1,4 +1,5 @@
-from datetime import datetime
+from calendar import c
+from datetime import datetime, date
 from openai import OpenAI
 
 from modules.Api import Api
@@ -42,8 +43,9 @@ class Speaker(Api):
     def what_does_user_want(self, user_message):
         print("Figuring out what the user wants...\n")
         json_template = """
-
+{
     weather_report: {
+        general_conversation: boolean. 
         weather_report_requested: boolean,
         general_weather_request: boolean,
         specific_days: List<String>,
@@ -60,11 +62,13 @@ class Speaker(Api):
         location: string,
         user_has_made_mistake: boolean,
     }
-
+}
 """
 
         prompt = f"""This is the user's request: {user_message}.
         Please distill into this json format what they want: {json_template}. 
+        weather_report_requested can only be true if the user has specifically asked for the weather, 
+        if this is not the case, then general_conversation is true (this includes asking the date or time).
         If they have asked just for the weather then general_weather_request must be true.
         Values like Today', 'Weekend', 'Thursday' go in specific_days, and have capitalised first letters.
         Specific_days cannot be an empty array it must have a value.
@@ -72,7 +76,7 @@ class Speaker(Api):
         Specific_time refers to time of day, not the day itself. 
         If not specified specific_day defaults to today.
         user_has_made_mistake is for only when you cannot figure out a specific part of the user's request.
-        Do not give an explanation. 
+        Do not give an explanation. Avoid starting sentences with certainly or similar vocabulary. 
         """
         lm_response = self.send_to_lm(prompt)
         print(lm_response)
@@ -83,9 +87,23 @@ class Speaker(Api):
         # https://www.w3schools.com/python/ref_dictionary_items.asp
         wants = []
         other_wants_list = []  # <- don't forget about this
-        # avoid heavy nesting at all costs
+        current_time = datetime.now().strftime("%H:%M:%S")
+        current_date = date.today()
+
         if want_json is not None:
             weather_wants = want_json["weather_report"]
+
+            if weather_wants["general_conversation"]:
+                return self.send_to_lm(
+                    f"""
+    Here is the user's message: {user_message}.
+    Please respond to them in a polite and brief manor.
+    Here is some general information that may help your response:
+    current time is {current_time}, the current date is {current_date}, 
+    only use this information if it relates to the user's message.
+
+"""
+                )
 
             if weather_wants["weather_report_requested"]:
                 for key, item in weather_wants.items():
@@ -115,7 +133,6 @@ class Speaker(Api):
                     location=weather_wants["location"],
                 )
 
-            current_time = datetime.now().strftime("%H:%M:%S")
             return self.send_to_lm(f"""
 Here is the user's request: {user_message}.
 Here is the information needed for that request: {open_metro_report}.
@@ -141,6 +158,7 @@ Please relay this information to the user in a short, polite and understandable 
 
     def check_for_json_hallucination(self, string):
         print("Checking for hallucinations...\n")
+        print(string, type(string))
         if string[:6] == "python":
             string = string.replace("python", "")
         else:
