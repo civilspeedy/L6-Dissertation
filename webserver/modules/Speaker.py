@@ -7,7 +7,8 @@ from modules.Weather import Open_Metro, Visual_Crossing
 
 
 class Speaker(Api):
-    # from https://build.nvidia.com/google/gemma-7b
+    """A class that inherits from Api for Language model control."""
+
     def __init__(self):
         super().__init__()
         self.client = OpenAI(
@@ -18,6 +19,14 @@ class Speaker(Api):
         self.geocode = Geocoding()
 
     def send_to_lm(self, prompt):
+        """Takes in prompt and makes https request to nvidia api hosting the LM. Contains fragments from:
+        from https://build.nvidia.com/google/gemma-7b
+
+        Parameters:
+        - prompt (str): a string prompt for the language model to respond to.
+
+        Returns:
+        - response (str): the language model's response to the prompt."""
         print("Giving message to LM...\n")
         response = ""
         request = self.client.chat.completions.create(
@@ -40,6 +49,14 @@ class Speaker(Api):
         return response
 
     def what_does_user_want(self, user_message, device_location):
+        """Uses the language model to produce a json that outlines what the user is wanting.
+
+        Parameters:
+        - user_message (str): the user's message directed for the language model.
+        - devices_location (dict): a dict pertaining to information relating to the user's device location.
+
+        Returns:
+        - dict: a dict outline what information the user is expecting."""
         print("Figuring out what the user wants...\n")
         json_template = """
 {
@@ -88,6 +105,13 @@ class Speaker(Api):
         return self.format_lm_json(lm_response)
 
     def fulfil_request(self, want_json, user_message, name, user_location):
+        """Fetches the corresponding information based on dict containing what the user is expecting.
+
+        Parameters:
+        - want_json (dict): a dict outlining what the user is wanting.
+        - user_message (str): the message the user sent, used for LM to gain context of information.
+        - name (str): the user's chosen name.
+        - user_location (dict): the user's device location."""
         print("Fulfilling User's Request...\n")
         # https://www.w3schools.com/python/ref_dictionary_items.asp
         wants = []
@@ -185,6 +209,13 @@ class Speaker(Api):
             return self.error_message()
 
     def format_lm_json(self, string):
+        """Formats the dict the LM produces from user request.
+
+        Parameters:
+        - string (str): the LM's dict that has been given in a string.
+
+        Returns:
+        - string_as_json: the formatted and parsed dict outline what the user wants."""
         print("Formatting the lm's json...\n")
         string_without_grave = string.replace("`", "")
 
@@ -195,6 +226,14 @@ class Speaker(Api):
         return string_as_json
 
     def check_for_json_hallucination(self, string):
+        """Sometime the LM hallucinates and adds extra wording to dict string.
+        This method removes this.
+
+        Parameters:
+        - string (str): the LM's dict that has been given in a string.
+
+        Returns:
+        - string (str): still a dict wrapped in a string but without the hallucinations at the start."""
         print("Checking for hallucinations...\n")
         print(string, type(string))
         if string[:6] == "python":
@@ -205,6 +244,10 @@ class Speaker(Api):
         return string
 
     def compare_reports(self):
+        """Finds the difference between the open metro and visual crossing reports and creates a list for this.
+
+        Returns:
+        - difference (list): a list containing all the data that differs between the two reports."""
         om_report = self.open_metro.report
         vc_report = self.visual_crossing.report
         difference = []
@@ -237,16 +280,31 @@ class Speaker(Api):
         return difference
 
     def error_message(self):
+        """A message to return the the user when they have made a mistake.
+
+        Returns:
+        - str: a string produced by lm to inform the user they have made a mistake and should try again."""
         return self.send_to_lm(
             "Please explain to that something has gone wrong and suggest that they try again."
         )
 
     def confuse_message(self):
+        """A message produced by the lm to inform the user that their intent could not be deduced.
+
+        Returns:
+        - str: a string produced by the lm to inform the user that their intent could not be deduced."""
         return self.send_to_lm(
             "Please explain to the user that you didn't quite understand what they meant, and ask they they try again."
         )
 
     def format_user_location(self, location):
+        """Formats the raw dict received from mobile app https message.
+
+        Parameters:
+        - location (dict): a dict containing the user's device location but some data is irrelevant.
+
+        Returns:
+        - dict: a dict containing just the latitude and longitude."""
         json_location = self.string_to_json(location)
         coords = json_location["coords"]
         lat = coords["latitude"]
@@ -254,6 +312,7 @@ class Speaker(Api):
         return {"long": long, "lat": lat}
 
     def user_location_name(self, location):
+        """Uses geocoding api to get the name of the user's device location."""
         return self.geocode.reverse(lat=location["lat"], long=location["long"])
 
     def no_location_message(self):

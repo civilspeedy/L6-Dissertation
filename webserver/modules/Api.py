@@ -5,10 +5,9 @@ import datetime
 
 
 class Api:
-    """Parent class relating to all api data requesting and storage."""
+    """Parent class relating to all api data requesting and formatting"""
 
     def __init__(self):
-        """Constructor where file locations are defined."""
         pass
 
     def send_request(self, url):
@@ -16,10 +15,10 @@ class Api:
         """Method for sending http requests using passed url and returns data in wrapped in string.
 
         Parameters:
-        - url (String): url for http requests
+        - url (str): url for http requests
 
         Returns:
-        String: the response from the request wrapped in a string."""
+        - str: the response from the request wrapped in a string."""
         try:
             sent_request = requests.get(url)
             sent_request.raise_for_status()
@@ -34,7 +33,7 @@ class Api:
         - string (String): string to be parsed into a dict.
 
         Returns:
-        - Dict: the string now as a dict."""
+        - dict: the string now as a dict."""
         print("string being converted: ", type(string))
         print("Converting string to json/dict...\n")
         return json.loads(string)
@@ -43,10 +42,10 @@ class Api:
         """Reads and returns the required api depending on which service is needed.
 
         Parameters:
-        - service_name (String): the name of the service requiring the key.
+        - service_name (str): the name of the service requiring the key.
 
         Returns:
-        String: the required api key as a string."""
+        - str: the required api key as a string."""
         try:
             with open("keys.json", "r") as file:
                 jsonFile = json.load(file)[0]
@@ -63,9 +62,25 @@ class Api:
             print("err in get_key ", e)
 
     def today_plus(self, today, days):
+        """Adds given amount of days to current date.
+
+        Parameters:
+        - today (str): the current date.
+        - days (int): the number of days to be added.
+
+        Returns:
+        - str: the new date
+        """
         return today + datetime.timedelta(days=days)
 
     def get_next_day_from_name(self, day_name):
+        """Finds date of given day name.
+
+        Parameters:
+        - day_name (str): the name of day being looked for.
+
+        Returns:
+        - str: the date relating to given day name"""
         today = datetime.date.today()
         for i in range(7):
             date = self.today_plus(today=today, days=i)
@@ -73,11 +88,26 @@ class Api:
                 return date
 
     def check_if_named_day(self, day):
+        """checks if a string is a day name.
+        Parameters:
+        - day (str): a day of the week.
+
+        Returns:
+        - bool: whether the passed string is a day name or not.
+        """
         for name_of_day in calendar.day_name:
             if name_of_day == day:
                 return True
 
     def get_specific_days(self, specific_days):
+        """fetches the dates for specific day arrangements to be then used in api requests.
+
+        Parameters:
+        - specific_days (list): the days the user has requested.
+
+        Returns:
+        - list: the start date, end date and named days (e.g. monday, tuesday) based of user's request.
+        """
         print("Getting day for report...\n")
         named_days = []
         start_date = None
@@ -111,5 +141,12 @@ class Api:
         return [start_date, end_date, named_days]
 
     def date_time_conversion(self, date_time):
+        """Converts time format used by open metro into a format that matches visual crossing.
+
+        Parameters:
+        - date_time (str): a specific date and time in one string.
+
+        Returns:
+        - dict: a dict where the date and time are separate values."""
         date_and_time = date_time.split("T")
         return {"date": date_and_time[0], "time": date_and_time[1] + ":00"}
