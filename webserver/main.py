@@ -10,20 +10,35 @@ speaker = Speaker()
 
 @app.route("/communicate", methods=["POST", "GET"])
 def communicate():
-    print("Received message...\n")
     message = request.args.get("message")
+    print(f"Received message... {message}")
 
     name = request.args.get("name")
+    print(name)
+
+    location = request.args.get("location")
+    print(location)
 
     response = speaker.fulfil_request(
-        want_json=speaker.what_does_user_want(message), user_message=message, name=name
+        want_json=speaker.what_does_user_want(message, check_device_location(location)),
+        user_message=message,
+        name=name,
+        user_location=location,
     )  # don't forget about this
+    print(speaker.format_user_location(location))
     return make_response(
         jsonify(
             {"response": response},
             200,
         )
     )
+
+
+def check_device_location(location):
+    if location == "None":
+        return False
+    else:
+        return True
 
 
 def run_local():

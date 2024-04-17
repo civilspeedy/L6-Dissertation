@@ -35,6 +35,7 @@ class Api:
 
         Returns:
         - Dict: the string now as a dict."""
+        print("string being converted: ", type(string))
         print("Converting string to json/dict...\n")
         return json.loads(string)
 
