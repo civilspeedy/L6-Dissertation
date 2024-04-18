@@ -84,24 +84,22 @@ class Speaker(Api):
 
         prompt = f"""This is the user's request: {user_message}.
         Please distill into this json format what they want: {json_template}. 
-        All null values can be replaced with false.
-        weather_report_requested can only be true if the user has specifically asked for the weather, 
-        if this is not the case, then general_conversation is true (this includes asking the date or time).
-        use_device_location must be true if they have asked to use their current location.
         The value for device_location_available is {device_location}. 
-        use_device_location can only be true if the user has not asked for a specific location.
-        if weather_report_requested is true, general_conversation must be false.
-        If they have asked just for the weather then general_weather_request must be true.
-        Values like Today', 'Weekend', 'Thursday' go in specific_days, and have capitalised first letters.
-        Specific_days cannot be an empty array it must have a value.
-        If they have asked for a weather report all values in general_inquiry must be false.
-        Specific_time refers to time of day, not the day itself. 
-        If not specified specific_day defaults to today.
-        user_has_made_mistake is for only when you cannot figure out a specific part of the user's request.
-        Do not give an explanation. Avoid starting sentences with certainly or similar vocabulary. 
+        Here are the rule for this json:
+        - All boolean values must either true or false, null is not allowed.
+        - If the user has given a city name use_device_location must be false
+        - if weather_report_requested and general_conversation cannot be the same values
+        - if the user has asked for the weather and no specific details general_weather_request is true
+        - strings must start with a capital letter 
+        - specific_days cannot be empty, unless general_conversation is true
+        - general_conversation is true when the user has requested something unrelated to weather.
+        - specific_time refers to time of day, not the day itself. 
+        - specific_day defaults to today.
+        - if intent cannot be deduced, user_has_made_mistake is true
+        - Do not give an explanation.
+        - Avoid starting sentences with certainly or similar vocabulary. 
         """
         lm_response = self.send_to_lm(prompt)
-        print(lm_response)
         return self.format_lm_json(lm_response)
 
     def fulfil_request(self, want_json, user_message, name, user_location):
@@ -139,6 +137,7 @@ class Speaker(Api):
                 )
 
             if weather_wants["weather_report_requested"]:
+                print("A weather report has been requested...")
                 for key, item in weather_wants.items():
                     if item:
                         wants.append(key)
@@ -148,8 +147,11 @@ class Speaker(Api):
                 end_date = days[1]
 
                 if weather_wants["use_device_location"]:
-                    if weather_wants["device_location_available"]:
-                        print("here")
+                    print("User wants to use their device location...")
+                    if (
+                        weather_wants["device_location_available"]
+                        and not weather_wants["asked_location"]
+                    ):
                         location = self.format_user_location(user_location)
                         long = location["long"]
                         lat = location["lat"]
@@ -171,9 +173,13 @@ class Speaker(Api):
     There is no room for Notes or extra comments, focus on providing the information the user has requested.
     Please relay this information to the user in a short, polite and understandable manor.
     """)
-                    else:
+                    if (
+                        weather_wants["use_device_location"]
+                        and not weather_wants["device_location_available"]
+                    ):
                         return self.no_location_message()
                 else:
+                    print("Using provided location name...")
                     location = self.geocode.default(weather_wants["asked_location"])
                     long = location[0]
                     lat = location[1]
@@ -193,16 +199,16 @@ class Speaker(Api):
                         location=pass_location,
                     )
 
-                return self.send_to_lm(f"""
-    Here is the user's request: {user_message}.
-    Their name is {name}
-    Here is the information needed for that request: {open_metro_report}.
-    Do not use ellipses.
-    The current time is" {current_time}, only relay this if it is relevant to the user's request.
-    Here is is a list that shows where if another source shows a different report: {self.compare_reports}. 
-    There is no room for Notes or extra comments, focus on providing the information the user has requested.
-    Please relay this information to the user in a short, polite and understandable manor.
-    """)
+                    return self.send_to_lm(f"""
+            Here is the user's request: {user_message}.
+            Their name is {name}
+            Here is the information needed for that request: {open_metro_report}.
+            Do not use ellipses.
+            The current time is" {current_time}, only relay this if it is relevant to the user's request.
+            Here is is a list that shows where if another source shows a different report: {self.compare_reports}. 
+            There is no room for Notes or extra comments, focus on providing the information the user has requested.
+            Please relay this information to the user in a short, polite and understandable manor.
+            """)
             if weather_wants["user_has_made_mistake"]:
                 return self.confuse_message()
         else:
@@ -248,6 +254,7 @@ class Speaker(Api):
 
         Returns:
         - difference (list): a list containing all the data that differs between the two reports."""
+        print("Comparing reports...\n")
         om_report = self.open_metro.report
         vc_report = self.visual_crossing.report
         difference = []
@@ -305,6 +312,7 @@ class Speaker(Api):
 
         Returns:
         - dict: a dict containing just the latitude and longitude."""
+        print("Formatting user's device location...\n")
         json_location = self.string_to_json(location)
         coords = json_location["coords"]
         lat = coords["latitude"]
@@ -312,15 +320,15 @@ class Speaker(Api):
         return {"long": long, "lat": lat}
 
     def user_location_name(self, location):
-        """Uses geocoding api to get the name of the user's device location. 
-        
+        """Uses geocoding api to get the name of the user's device location.
+
         Returns:
         - str: the name of the user's location."""
         return self.geocode.reverse(lat=location["lat"], long=location["long"])
 
     def no_location_message(self):
         """A message to be relayed to the user of they have requested to use their device location but has not provided it.
-        
+
         Returns:
         - st: a string generated by the lm to inform the user they have to enabled their device location."""
         return self.send_to_lm(

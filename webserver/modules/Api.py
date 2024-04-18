@@ -36,7 +36,10 @@ class Api:
         - dict: the string now as a dict."""
         print("string being converted: ", type(string))
         print("Converting string to json/dict...\n")
-        return json.loads(string)
+        if string is not None:
+            return json.loads(string)
+        else:
+            pass
 
     def get_key(self, service_name):
         """Reads and returns the required api depending on which service is needed.
@@ -138,7 +141,9 @@ class Api:
                 start_date = self.get_next_day_from_name("Saturday")
                 end_date = self.get_next_day_from_name("Sunday")
 
-        return [start_date, end_date, named_days]
+        day_array = [str(start_date), str(end_date), named_days]
+        print(day_array)
+        return day_array
 
     def date_time_conversion(self, date_time):
         """Converts time format used by open metro into a format that matches visual crossing.

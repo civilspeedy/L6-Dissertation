@@ -10,8 +10,7 @@ speaker = Speaker()
 
 @app.route("/communicate", methods=["POST", "GET"])
 def communicate():
-    """The function for facilitating communication of the user and language model.
-    """
+    """The function for facilitating communication of the user and language model."""
 
     message = request.args.get("message")
     print(f"Received message... {message}")
@@ -28,7 +27,6 @@ def communicate():
         name=name,
         user_location=location,
     )  # don't forget about this
-    print(speaker.format_user_location(location))
     return make_response(
         jsonify(
             {"response": response},
@@ -39,10 +37,10 @@ def communicate():
 
 def check_device_location(location):
     """Checks whether the user's device location has been provided.
-    
+
     Parameters:
     - location (string): will either have a json wrapped in a string containing the user's device location or read as 'None'."
-    
+
     Returns:
     - bool: a bool relating to whether the device location has been provided or not."""
     if location == "None":
