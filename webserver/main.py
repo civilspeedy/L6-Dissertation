@@ -60,4 +60,4 @@ def run_on_network():
 
 
 if __name__ == "__main__":
-    run_local()
+    run_on_network()
