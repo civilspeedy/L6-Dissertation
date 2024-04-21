@@ -21,12 +21,23 @@ def communicate():
     location = request.args.get("location")
     print(location)
 
+    isNewChat = request.args.get("chatStatus")
+    print(isNewChat)
+
     response = speaker.fulfil_request(
-        want_json=speaker.what_does_user_want(message, check_device_location(location)),
+        weather_wants=speaker.what_does_user_want(
+            message, check_device_location(location)
+        ),
         user_message=message,
         name=name,
         user_location=location,
-    )  # don't forget about this
+    )
+
+    speaker.add_to_context(message=message, source="user", chatStatus=isNewChat)
+    speaker.add_to_context(message=response, source="speaker", chatStatus=isNewChat)
+
+    print(response)
+
     return make_response(
         jsonify(
             {"response": response},

@@ -14,7 +14,8 @@ class Open_Metro(Api):
         Parameters:
         - long (float): longitude value relating to the user's request.
         - lat (float): latitude value relating to the user's request.
-        - what_user_wants (dict): a dict contain bool values for the type of information the user would like.
+        - what_user_wants (dict): a dict contain bool values for the type of information the
+        user would like.
         - start_date (str): the date in which the user would like information to start from.
         - end_date (str): the date the user would like the information to end on.
 
