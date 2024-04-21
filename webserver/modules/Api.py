@@ -34,12 +34,14 @@ class Api:
 
         Returns:
         - dict: the string now as a dict."""
-        print("string being converted: ", type(string))
         print("Converting string to json/dict...\n")
-        if string is not None:
-            return json.loads(string)
-        else:
-            pass
+        try:
+            if string is not None:
+                return json.loads(string)
+            else:
+                pass
+        except Exception:
+            return None
 
     def get_key(self, service_name):
         """Reads and returns the required api depending on which service is needed.

@@ -86,27 +86,30 @@ class Speaker(Api):
         prompt = f"""This is the user's request: {user_message}.
         Please distill into this json format what they want: {json_template}. 
         The value for device_location_available is {device_location}. 
-        Here are the rule for this json:
-        - All boolean values must either true or false, null is not allowed.
-        - If the user has given a city name use_device_location must be false
+        Here are the rule for this json, it is paramount you do not deviate from these rules no matter what:
+        - general_conversation is true when the user has made any request that does not involve the weather.
+        - If the user has given a city name use_device_location must be false.
         - use_device_location can only be true if the user has explicitly asked to use their current location (e.g "weather at my current location").
         - If there is a value in asked_location use_device_location must be false.
-        - if weather_report_requested and general_conversation cannot be the same values
-        - if the user has asked for the weather and no specific details general_weather_request is true
-        - strings must start with a capital letter 
-        - specific_days cannot be empty, unless general_conversation is true
-        - general_conversation is true when the user has requested something unrelated to weather.
+        - if weather_report_requested and general_conversation cannot be the same values.
+        - if the user has asked for the weather and no specific details general_weather_request is true.
+        - strings must start with a capital letter.
+        - specific_days cannot be empty, unless general_conversation is true.
         - specific_time refers to time of day, not the day itself. 
         - specific_day defaults to today.
-        - if intent cannot be deduced, user_has_made_mistake is true
+        - if intent cannot be deduced, user_has_made_mistake is true.
         - Do not give an explanation.
         - Avoid starting sentences with certainly or similar vocabulary. 
         """
         lm_response = self.send_to_lm(prompt)
-        json = self.format_lm_json(lm_response)["weather_report"]
-        if json["asked_location"] != "" or json["asked_location"] is not None:
-            json["use_device_location"] = False
-        return json
+        json = self.format_lm_json(lm_response)
+        if json is not None:
+            json = json["weather_report"]
+            if json["asked_location"] != "" or json["asked_location"] is not None:
+                json["use_device_location"] = False
+            if json["general_conversation"] is True:
+                json["weather_report_requested"] = False
+            return json
 
     def fulfil_request(self, weather_wants, user_message, name, user_location):
         """Fetches the corresponding information based on dict containing what the user is expecting.
@@ -124,6 +127,7 @@ class Speaker(Api):
         wants = []
         current_time = datetime.now().strftime("%H:%M:%S")
         current_date = date.today()
+        print(weather_wants)
 
         if weather_wants is not None:
             print("use device loc", weather_wants["use_device_location"])
@@ -252,13 +256,16 @@ class Speaker(Api):
         Returns:
         - string (str): still a dict wrapped in a string but without the hallucinations at the start."""
         print("Checking for hallucinations...\n")
-        print(string, type(string))
-        if string[:6] == "python":
-            string = string.replace("python", "")
-        else:
-            string = string.replace("json", "")
 
-        return string
+        try:
+            if string[:6] == "python":
+                string = string.replace("python", "")
+            else:
+                string = string.replace("json", "")
+
+            return string
+        except Exception:
+            return "Unable to process that request."
 
     def compare_reports(self):
         """Finds the difference between the open metro and visual crossing reports and creates a list for this.
@@ -303,7 +310,8 @@ class Speaker(Api):
         Returns:
         - str: a string produced by lm to inform the user they have made a mistake and should try again."""
         return self.send_to_lm(
-            "Please explain to that something has gone wrong and suggest that they try again."
+            """Please explain to that something has gone wrong and suggest that they try again.
+            Just give one response with not explanation"""
         )
 
     def confuse_message(self):
@@ -312,7 +320,8 @@ class Speaker(Api):
         Returns:
         - str: a string produced by the lm to inform the user that their intent could not be deduced."""
         return self.send_to_lm(
-            "Please explain to the user that you didn't quite understand what they meant, and ask they they try again."
+            """Please explain to the user that you didn't quite understand what they meant, and ask they they try again.
+            Just give one response with no explanation"""
         )
 
     def format_user_location(self, location):
@@ -343,7 +352,8 @@ class Speaker(Api):
         Returns:
         - st: a string generated by the lm to inform the user they have to enabled their device location."""
         return self.send_to_lm(
-            "Please explain to the user that if they want to do that action they need to enable their devices location services."
+            """Please explain to the user that if they want to do that action they need to enable their devices location services.
+            Just give one response with no explanation"""
         )
 
     def add_to_context(self, message, source, chatStatus):

@@ -3,16 +3,17 @@ from modules.Api import Api
 
 class Geocoding(Api):
     """A class that inherits from Api to carry out geocoding related functionality and api calls."""
+
     def __init__(self):
         self.key = self.get_key("locIq")
 
     def reverse(self, lat, long):
         """Returns the name or address of a location based of a provided latitude and longitude.
-        
+
         Parameters:
         - lat (float): provided latitude.
         - long (float): provided longitude.
-        
+
         Returns:
         - dict: a dict containing the address of the provided long and lat.
         """
@@ -36,26 +37,29 @@ class Geocoding(Api):
 
     def format_for_request(self, location_name):
         """Formats a location name so that it can be used in a request for geocoding.
-        
+
         Parameters:
         - location_name (str): the name of a location to be found.
-        
+
         Returns:
         - formatted_location (str): the location name formatted correctly for the api request."""
         print("Formatting name for api request...")
-        if " " in location_name:
-            formatted_location = location_name.replace(" ", "%20")
+        if location_name is not None:
+            if " " in location_name:
+                formatted_location = location_name.replace(" ", "%20")
+            else:
+                formatted_location = location_name
+            formatted_location += "%20United%20Kingdom"
+            return formatted_location
         else:
-            formatted_location = location_name
-        formatted_location += "%20United%20Kingdom"
-        return formatted_location
+            return None
 
     def get_long_lat(self, json):
         """Isolates the long and lat values from return json from geocoding api.
-        
+
         Parameters:
         -json (dict): the json return from LocationIq's api service
-        
+
         Returns:
         - value (list): a list containing the long and lat values."""
         print("Putting lat and long into array...")
