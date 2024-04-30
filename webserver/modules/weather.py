@@ -100,9 +100,7 @@ class Open_Metro(Api):
         if self.report is not None:
             if self.report["hourly"] is not None:
                 time = self.report["hourly"]["time"]
-                print(time)
                 for i in range(len(time)):
-                    print(time[i], datetime)
                     if time[i] == datetime:
                         return self.report["hourly"][key][i]
 

@@ -50,7 +50,8 @@ class Api:
         - service_name (str): the name of the service requiring the key.
 
         Returns:
-        - str: the required api key as a string."""
+        - str: the required api key as a string.
+        - None: error has occurred."""
         try:
             with open("keys.json", "r") as file:
                 jsonFile = json.load(file)[0]
@@ -65,6 +66,7 @@ class Api:
 
         except Exception as e:
             print("err in get_key ", e)
+            return None
 
     def today_plus(self, today, days):
         """Adds given amount of days to current date.
@@ -76,7 +78,7 @@ class Api:
         Returns:
         - str: the new date
         """
-        return today + datetime.timedelta(days=days)
+        return today + datetime.timedelta(days)
 
     def get_next_day_from_name(self, day_name):
         """Finds date of given day name.
@@ -94,6 +96,7 @@ class Api:
 
     def check_if_named_day(self, day):
         """checks if a string is a day name.
+
         Parameters:
         - day (str): a day of the week.
 
@@ -143,8 +146,15 @@ class Api:
                 start_date = self.get_next_day_from_name("Saturday")
                 end_date = self.get_next_day_from_name("Sunday")
 
+            if specific_day in ("this week", "This Week", "Week", "week"):
+                start_date = datetime.datetime.today()
+                end_date = self.today_plus(start_date, 7)
+
+            if specific_day in ("next week", "Next Week", "Next week"):
+                start_date = self.get_next_day_from_name("monday")
+                end_date = self.today_plus(start_date, 7)
+
         day_array = [str(start_date), str(end_date), named_days]
-        print(day_array)
         return day_array
 
     def date_time_conversion(self, date_time):
