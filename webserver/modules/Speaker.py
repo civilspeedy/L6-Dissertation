@@ -222,7 +222,6 @@ class Speaker(Api):
             Here is the information needed for that request: {open_metro_report}.
             Do not use ellipses. Do not mention other sources.
             Here is context of the chat: {self.message_store}, this does not need to be used.
-            The current time is: {current_time}, only relay this if it is relevant to the user's request.
             Here is is a list that shows where if another source shows a different report: {self.compare_reports}. 
             There is no room for Notes or extra comments, focus on providing the information the user has requested.
             Please relay this information to the user in a short, polite and understandable manor.
