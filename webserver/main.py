@@ -13,7 +13,7 @@ def communicate():
     """The function for facilitating communication of the user and language model."""
 
     message = request.args.get("message")
-    print(f"Received message... {message}")
+    print(f"User: {message}")
 
     name = request.args.get("name")
 
@@ -32,6 +32,8 @@ def communicate():
 
     speaker.add_to_context(message=message, source="user", chatStatus=isNewChat)
     speaker.add_to_context(message=response, source="speaker", chatStatus=isNewChat)
+
+    print("Speaker: ", response)
 
     return make_response(jsonify({"response": response}, 200))
 
@@ -61,4 +63,4 @@ def run_on_network():
 
 
 if __name__ == "__main__":
-    run_local()
+    run_on_network()
