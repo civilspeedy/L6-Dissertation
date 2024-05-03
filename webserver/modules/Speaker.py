@@ -89,7 +89,7 @@ class Speaker(Api):
         Please distill into this json format what they want: {json_template}. 
         Here are the rule for this json, it is paramount you do not deviate from these rules no matter what:
         - if the user has asked for the weather and no specific details general_weather_request is true.
-        - general_conversation is true when the user has made any request that does not involve the weather.
+        - if the user talks about anything that isn't related to weather general_conversation is true.
         - specific days is for phrases or words like: "today", tomorrow", "Friday and Saturday", ect...
         - weather_report_requested and general_conversation cannot be the same values.
         - message like "what is the weather at my current location" indicates.
@@ -117,6 +117,7 @@ class Speaker(Api):
 
         print("Fulfilling User's Request...\n")
 
+        print("wants: ", weather_wants)
         wants = []
         current_time = datetime.now().strftime("%H:%M:%S")
         current_date = date.today()
@@ -377,7 +378,6 @@ class Speaker(Api):
         - json (dict): corrected dict"""
         print("Checking json...\n")
 
-        print(json)
         if json is not None:
             json = json["weather_report"]
             if json["asked_location"] not in (None, ""):
@@ -386,6 +386,8 @@ class Speaker(Api):
                 if json["asked_location"] in ("current location", "Current Location"):
                     json["asked_location"] = None
                     json["use_device_location"] = True
+            if json["general_conversation"] is True:
+                json["weather_report_requested"] = False
 
             if json["specific_days"] == []:
                 json["specific_days"] = ["today"]
