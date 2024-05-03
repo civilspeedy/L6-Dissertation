@@ -136,6 +136,7 @@ class Speaker(Api):
     Their name is {name}.
     {context_message}
     Please respond to them in a polite and brief manor.
+    Just return your response. Do not respond in markdown format.
     Here is some general information that may help your response:
     current time is {current_time}, the current date is {current_date}, 
     only use this information if it relates to the user's message.
@@ -175,7 +176,7 @@ class Speaker(Api):
     Their name is {name}
     {context_message}
     Here is the information needed for that request: {open_metro_report}.
-    Do not use ellipses. Do not mention other sources.
+    Do not use ellipses. Do not mention other sources. Just return your response. Do not respond in markdown format.
     Here is context of the chat: {self.message_store}, this does not need to be used.
     The current time is" {current_time}, only relay this if it is relevant to the user's request.
     There is no room for Notes or extra comments, focus on providing the information the user has requested.
@@ -212,7 +213,7 @@ class Speaker(Api):
             Their name is {name}
             {context_message}
             Here is the information needed for that request: {open_metro_report}, do not abbreviate the data.
-            Do not use ellipses. Do not mention other sources.
+            Do not use ellipses. Do not mention other sources. Just return your response. Do not respond in markdown format. 
             Here is context of the chat: {self.message_store}, this does not need to be used.
             Here is is a list that shows where if another source shows a different report: {self.compare_reports}. 
             There is no room for Notes or extra comments, focus on providing the information the user has requested.
@@ -382,6 +383,9 @@ class Speaker(Api):
             if json["asked_location"] not in (None, ""):
                 json["general_conversation"] = False
                 json["use_device_location"] = False
+                if json["asked_location"] in ("current location", "Current Location"):
+                    json["asked_location"] = None
+                    json["use_device_location"] = True
 
             if json["specific_days"] == []:
                 json["specific_days"] = ["today"]
