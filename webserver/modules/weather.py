@@ -28,6 +28,7 @@ class Open_Metro(Api):
         url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={long}&hourly={self.create_info_string(what_user_wants)}&start_date={start_date}&end_date={end_date}"
 
         self.report = self.string_to_json(self.send_request(url))
+        print("weather report: ", self.report)
         return self.report
 
     def create_info_string(self, what_user_wants):

@@ -18,13 +18,12 @@ def communicate():
     name = request.args.get("name")
 
     location = request.args.get("location")
+    speaker.location_access = check_device_location(location)
 
     isNewChat = request.args.get("chatStatus")
 
     response = speaker.fulfil_request(
-        weather_wants=speaker.what_does_user_want(
-            message, check_device_location(location)
-        ),
+        weather_wants=speaker.what_does_user_want(message),
         user_message=message,
         name=name,
         user_location=location,

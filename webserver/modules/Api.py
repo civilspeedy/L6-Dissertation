@@ -36,11 +36,13 @@ class Api:
         - dict: the string now as a dict."""
         print("Converting string to json/dict...\n")
         try:
+            print("in json: ", string)
             if string is not None:
                 return json.loads(string)
             else:
                 pass
         except Exception:
+            print("here")
             return None
 
     def get_key(self, service_name):
@@ -117,6 +119,7 @@ class Api:
         - list: the start date, end date and named days (e.g. monday, tuesday) based of user's request.
         """
         print("Getting day for report...\n")
+        print(len(specific_days))
         named_days = []
         start_date = None
         end_date = None
@@ -135,6 +138,7 @@ class Api:
                 start_date = self.get_next_day_from_name(specific_day)
 
             if specific_day in ("today", "Today"):
+                print("getting here")
                 start_date = today
 
             if specific_day in ("tomorrow", "Tomorrow"):
@@ -167,3 +171,16 @@ class Api:
         - dict: a dict where the date and time are separate values."""
         date_and_time = date_time.split("T")
         return {"date": date_and_time[0], "time": date_and_time[1] + ":00"}
+
+    def string_to_bool(self, string):
+        """Converts a string into a bool value.
+
+        Parameters:
+        - string (str): a bool value in a string.
+
+        Returns:
+        - bool: the value trying to be represented in the string."""
+        if string in ("True", "true"):
+            return True
+        else:
+            return False

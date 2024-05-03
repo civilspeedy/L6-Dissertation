@@ -18,6 +18,8 @@ class Speaker(Api):
         self.visual_crossing = Visual_Crossing()
         self.geocode = Geocoding()
         self.message_store = []
+        self.location_access = False
+        self.spoken_to_before = False
 
     def send_to_lm(self, prompt):
         """Takes in prompt and makes https request to nvidia api hosting the LM.
@@ -38,7 +40,7 @@ class Speaker(Api):
                     "content": prompt,
                 }
             ],
-            temperature=0.3,
+            temperature=0.1,
             top_p=1,
             max_tokens=1024,
             stream=True,
@@ -49,7 +51,7 @@ class Speaker(Api):
                 response += chunk.choices[0].delta.content
         return response
 
-    def what_does_user_want(self, user_message, device_location):
+    def what_does_user_want(self, user_message):
         """Uses the language model to produce a json that outlines what the user is wanting.
 
         Parameters:
@@ -63,11 +65,11 @@ class Speaker(Api):
 {
     weather_report: {
         general_conversation: boolean,
-        from_device_location: boolean,
+        use_device_location: boolean,
         device_location_available: boolean,
         weather_report_requested: boolean,
         general_weather_request: boolean,
-        specific_days: List<String>,
+        specific_days: [],
         temperature_avg: boolean,
         top_temperature: boolean,
         lowest_temperature: boolean,
@@ -78,42 +80,28 @@ class Speaker(Api):
         cloud_coverage: boolean,
         visibility: boolean,
         asked_location: string,
-        user_has_made_mistake: boolean,
+        user_has_made_mistake: boolean
     }
 }
 """
 
         prompt = f"""This is the user's request: {user_message}.
         Please distill into this json format what they want: {json_template}. 
-        The value for device_location_available is {device_location}. 
         Here are the rule for this json, it is paramount you do not deviate from these rules no matter what:
-        - general_conversation is true when the user has made any request that does not involve the weather.
-        - a message like 'hello' or 'how are you?' counts as general conversation.
-        - If the user has given a city name from_device_location must be false.
-        - from_device_location is true when the user asks specifically for their current location
-        - if from device_location is true asked_location must be empty
-        - If there is a value in asked_location from_device_location must be false.
-        - if weather_report_requested and general_conversation cannot be the same values.
         - if the user has asked for the weather and no specific details general_weather_request is true.
-        - strings must start with a capital letter.
-        - specific_days cannot be empty, unless general_conversation is true.
-        - specific_time refers to time of day, not the day itself. 
-        - specific_day defaults to today.
-        - if intent cannot be deduced, user_has_made_mistake is true.
+        - general_conversation is true when the user has made any request that does not involve the weather.
+        - specific days is for phrases or words like: "today", tomorrow", "Friday and Saturday", ect...
+        - weather_report_requested and general_conversation cannot be the same values.
+        - message like "what is the weather at my current location" indicates.
+        - a message like 'hello' or 'how are you?' are examples of general conversation.
         - Do not give an explanation.
-        - Avoid starting sentences with certainly or similar vocabulary. 
         """
+
         lm_response = self.send_to_lm(prompt)
-        json = self.format_lm_json(lm_response)
+        print(lm_response)
+        json_formatted = self.format_lm_json(lm_response)
 
-        if json is not None:
-            json = json["weather_report"]
-            if json["general_conversation"] is True:
-                json["weather_report_requested"] = False
-            return json
-
-        if json is None:
-            return None
+        return self.json_check(json_formatted)
 
     def fulfil_request(self, weather_wants, user_message, name, user_location):
         """Fetches the corresponding information based on dict containing what the user is expecting.
@@ -132,6 +120,7 @@ class Speaker(Api):
         wants = []
         current_time = datetime.now().strftime("%H:%M:%S")
         current_date = date.today()
+        context_message = self.context_message()
 
         if weather_wants is None:
             return "Couldn't process that request."
@@ -145,6 +134,7 @@ class Speaker(Api):
                     f"""
     Here is the user's message: {user_message}.
     Their name is {name}.
+    {context_message}
     Please respond to them in a polite and brief manor.
     Here is some general information that may help your response:
     current time is {current_time}, the current date is {current_date}, 
@@ -163,7 +153,7 @@ class Speaker(Api):
                 start_date = days[0]
                 end_date = days[1]
 
-                if weather_wants["from_device_location"]:
+                if weather_wants["use_device_location"]:
                     print("User wants to use their device location...")
                     if weather_wants["device_location_available"] and (
                         not weather_wants["asked_location"]
@@ -183,6 +173,7 @@ class Speaker(Api):
                         return self.send_to_lm(f"""
     Here is the user's request: {user_message}.
     Their name is {name}
+    {context_message}
     Here is the information needed for that request: {open_metro_report}.
     Do not use ellipses. Do not mention other sources.
     Here is context of the chat: {self.message_store}, this does not need to be used.
@@ -219,7 +210,8 @@ class Speaker(Api):
                     return self.send_to_lm(f"""
             Here is the user's request: {user_message}.
             Their name is {name}
-            Here is the information needed for that request: {open_metro_report}.
+            {context_message}
+            Here is the information needed for that request: {open_metro_report}, do not abbreviate the data.
             Do not use ellipses. Do not mention other sources.
             Here is context of the chat: {self.message_store}, this does not need to be used.
             Here is is a list that shows where if another source shows a different report: {self.compare_reports}. 
@@ -240,32 +232,21 @@ class Speaker(Api):
         Returns:
         - string_as_json (dict): the formatted and parsed dict outline what the user wants."""
         print("Formatting the lm's json...\n")
-        string_without_grave = string.replace("`", "")
-
-        anti_hallucination = self.check_for_json_hallucination(string_without_grave)
-
-        string_as_json = self.string_to_json(anti_hallucination)
-
-        return string_as_json
-
-    def check_for_json_hallucination(self, string):
-        """Sometime the LM hallucinates and adds extra wording to dict string.
-        This method removes this.
-
-        Parameters:
-        - string (str): the LM's dict that has been given in a string.
-
-        Returns:
-        - string (str): still a dict wrapped in a string but without the hallucinations at the start."""
-        print("Checking for hallucinations...\n")
-
+        print("string: ", string, " type: ", type(string))
         try:
+            string = string.replace("`", "")
+            print("1: ", string)
             if string[:6] == "python":
                 string = string.replace("python", "")
+                print("2: ", string)
             else:
                 string = string.replace("json", "")
+                print("3: ", string)
 
-            return string
+            string_as_json = self.string_to_json(string)
+
+            return string_as_json
+
         except Exception:
             return "Unable to process that request."
 
@@ -369,10 +350,45 @@ class Speaker(Api):
         try:
             if chatStatus == "true":
                 self.message_store = []
+                self.spoken_to_before = False
             else:
+                self.spoken_to_before = True
                 if source == "user":
                     self.message_store.append({"source": source, "message": message})
                 if source == "speaker":
                     self.message_store.append({"source": source, "message": message})
         except Exception as e:
             print("err in add_to_context ", e)
+
+    def context_message(self):
+        if self.get_specific_days:
+            return "You have spoken to this user before, you do not need to greet them."
+        else:
+            return "This is a new conversation, please make sure to greet the user."
+
+    def json_check(self, json):
+        """Method to compensate for areas in which LM gets confused.
+
+        Parameters:
+        - json (dict): the returned json from the language model.
+
+        Returns:
+        - json (dict): corrected dict"""
+        print("Checking json...\n")
+
+        print(json)
+        if json is not None:
+            json = json["weather_report"]
+            if json["asked_location"] not in (None, ""):
+                json["general_conversation"] = False
+                json["use_device_location"] = False
+
+            if json["specific_days"] == []:
+                json["specific_days"] = ["today"]
+
+            json["device_location_available"] == self.location_access
+            print(json)
+            return json
+
+        if json is None:
+            return None
