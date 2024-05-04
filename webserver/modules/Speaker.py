@@ -31,25 +31,29 @@ class Speaker(Api):
         Returns:
         - response (str): the language model's response to the prompt."""
         print("Giving message to LM...\n")
-        response = ""
-        request = self.client.chat.completions.create(
-            model="google/gemma-7b",
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-            temperature=0.1,
-            top_p=1,
-            max_tokens=1024,
-            stream=True,
-        )
+        try:
+            response = ""
+            request = self.client.chat.completions.create(
+                model="google/gemma-7b",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                temperature=0.1,
+                top_p=1,
+                max_tokens=1024,
+                stream=True,
+            )
 
-        for chunk in request:
-            if chunk.choices[0].delta.content is not None:
-                response += chunk.choices[0].delta.content
-        return response
+            for chunk in request:
+                if chunk.choices[0].delta.content is not None:
+                    response += chunk.choices[0].delta.content
+            return response
+        except Exception as e:
+            print("err in send_to_lm ", e)
+            return None
 
     def what_does_user_want(self, user_message):
         """Uses the language model to produce a json that outlines what the user is wanting.
@@ -90,7 +94,7 @@ class Speaker(Api):
         Here are the rule for this json, it is paramount you do not deviate from these rules no matter what:
         - if the user has asked for the weather and no specific details general_weather_request is true.
         - if the user talks about anything that isn't related to weather general_conversation is true.
-        - specific days is for phrases or words like: "today", tomorrow", "Friday and Saturday", ect...
+        - please put the day(s) the user has mentioned into specific_days, include phrases like "this week".
         - weather_report_requested and general_conversation cannot be the same values.
         - message like "what is the weather at my current location" indicates.
         - a message like 'hello' or 'how are you?' are examples of general conversation.
@@ -131,6 +135,7 @@ class Speaker(Api):
                 weather_wants["general_conversation"]
                 and weather_wants["weather_report_requested"] is False
             ):
+                print("giving casual response...")
                 return self.send_to_lm(
                     f"""
     Here is the user's message: {user_message}.
@@ -139,9 +144,9 @@ class Speaker(Api):
     Please respond to them in a polite and brief manor.
     Just return your response. Do not respond in markdown format.
     Here is some general information that may help your response:
-    current time is {current_time}, the current date is {current_date}, 
-    only use this information if it relates to the user's message.
-    Here is context of the chat: {self.message_store}, this does not need to be used.
+    - current time is {current_time}, the current date is {current_date}, 
+    - only use this information if it relates to the user's message.
+    - previous messages: {self.message_store}
 """
                 )
 
@@ -215,7 +220,9 @@ class Speaker(Api):
             {context_message}
             Here is the information needed for that request: {open_metro_report}, do not abbreviate the data.
             Do not use ellipses. Do not mention other sources. Just return your response. Do not respond in markdown format. 
+            Try to keep response in one sentence.
             Here is context of the chat: {self.message_store}, this does not need to be used.
+            The current time is" {current_time}, only relay this if it is relevant to the user's request.
             Here is is a list that shows where if another source shows a different report: {self.compare_reports}. 
             There is no room for Notes or extra comments, focus on providing the information the user has requested.
             Please relay this information to the user in a short, polite and understandable manor.
@@ -380,14 +387,23 @@ class Speaker(Api):
 
         if json is not None:
             json = json["weather_report"]
+            print(
+                "general conversation: ",
+                json["general_conversation"],
+                " asked location: ",
+                json["asked_location"],
+            )
             if json["asked_location"] not in (None, ""):
+                print("Here")
                 json["general_conversation"] = False
                 json["use_device_location"] = False
                 if json["asked_location"] in ("current location", "Current Location"):
                     json["asked_location"] = None
                     json["use_device_location"] = True
-            if json["general_conversation"] is True:
+
+            if json["general_conversation"]:
                 json["weather_report_requested"] = False
+                json["general_weather_request"] = False
 
             if json["specific_days"] == []:
                 json["specific_days"] = ["today"]

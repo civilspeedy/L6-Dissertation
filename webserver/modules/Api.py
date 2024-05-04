@@ -151,7 +151,7 @@ class Api:
                 end_date = self.get_next_day_from_name("Sunday")
 
             if specific_day in ("this week", "This Week", "Week", "week"):
-                start_date = datetime.datetime.today()
+                start_date = datetime.date.today()
                 end_date = self.today_plus(start_date, 7)
 
             if specific_day in ("next week", "Next Week", "Next week"):
