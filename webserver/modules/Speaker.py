@@ -344,13 +344,13 @@ class Speaker(Api):
             Just give one response with no explanation"""
         )
 
-    def add_to_context(self, message, source, chatStatus, name):
+    def add_to_context(self, message, source, name):
         """Function that updates a list recording the interaction between user and LM.
 
         Parameters:
-        - message (str): a message from either the user or LM
-        - source (str): a string denoting where the message came from
-        - chatStatus (str): a bool that has been wrapped in a string denoting whether a new chat has started
+        - message (str): a message from either the user or LM.
+        - source (str): a string denoting where the message came from.
+        - name (str): the name associated with where the message is from.
         """
         try:
             self.spoken_to_before = True
