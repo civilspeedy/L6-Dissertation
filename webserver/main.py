@@ -11,16 +11,17 @@ speaker = Speaker()
 @app.route("/communicate", methods=["POST", "GET"])
 def communicate():
     """The function for facilitating communication of the user and language model."""
+    isNewChat = request.args.get("chatStatus")
+
+    speaker.check_chat_status(isNewChat)
 
     message = request.args.get("message")
-    print(f"User: {message}")
+    print("User:", message)
 
     name = request.args.get("name")
 
     location = request.args.get("location")
     speaker.location_access = check_device_location(location)
-
-    isNewChat = request.args.get("chatStatus")
 
     response = speaker.fulfil_request(
         weather_wants=speaker.what_does_user_want(message),
@@ -29,11 +30,15 @@ def communicate():
         user_location=location,
     )
 
-    speaker.add_to_context(message=message, source="user", chatStatus=isNewChat)
-    speaker.add_to_context(message=response, source="speaker", chatStatus=isNewChat)
+    speaker.add_to_context(
+        message=message, source="user", chatStatus=isNewChat, name=name
+    )
 
-    print("Speaker: ", response)
+    speaker.add_to_context(
+        message=response, source="speaker", chatStatus=isNewChat, name="gemma-7b"
+    )
 
+    print("LM:", response)
     return make_response(jsonify({"response": response}, 200))
 
 

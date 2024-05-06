@@ -36,13 +36,11 @@ class Api:
         - dict: the string now as a dict."""
         print("Converting string to json/dict...\n")
         try:
-            print("in json: ", string)
             if string is not None:
                 return json.loads(string)
             else:
                 pass
         except Exception:
-            print("here")
             return None
 
     def get_key(self, service_name):
@@ -106,7 +104,7 @@ class Api:
         - bool: whether the passed string is a day name or not.
         """
         for name_of_day in calendar.day_name:
-            if name_of_day == day:
+            if name_of_day in day:
                 return True
 
     def get_specific_days(self, specific_days):
@@ -119,26 +117,36 @@ class Api:
         - list: the start date, end date and named days (e.g. monday, tuesday) based of user's request.
         """
         print("Getting day for report...\n")
-        print(len(specific_days))
         named_days = []
         start_date = None
         end_date = None
         today = datetime.date.today()
-        # need something for like, this weekend and the next
-        for specific_day in specific_days:  # e.g. monday
+
+        for specific_day in specific_days:
             if self.check_if_named_day(specific_day):
-                named_days.append(self.get_next_day_from_name(specific_day))
+                if "next" in specific_day:
+                    print("triggered")
+                    specific_day = specific_day.replace("next", "")
+                    specific_day = specific_day.replace(" ", "")
+                    print(specific_day)
+                day_date = self.get_next_day_from_name(specific_day)
+                print(day_date)
+                named_days.append(str(day_date))
 
         if named_days != []:
+            print(named_days)
             start_date, end_date = named_days[0], named_days[-1]
+            day_array = [str(start_date), str(end_date), named_days]
+            print(day_array)
+            return day_array
 
         if len(specific_days) == 1:
             specific_day = specific_days[0]
+
             if self.check_if_named_day(specific_day):
                 start_date = self.get_next_day_from_name(specific_day)
 
             if specific_day in ("today", "Today"):
-                print("getting here")
                 start_date = today
 
             if specific_day in ("tomorrow", "Tomorrow"):
@@ -159,6 +167,7 @@ class Api:
                 end_date = self.today_plus(start_date, 7)
 
         day_array = [str(start_date), str(end_date), named_days]
+        print(day_array)
         return day_array
 
     def date_time_conversion(self, date_time):
