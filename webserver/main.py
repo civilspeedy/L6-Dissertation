@@ -30,13 +30,9 @@ def communicate():
         user_location=location,
     )
 
-    speaker.add_to_context(
-        message=message, source="user", chatStatus=isNewChat, name=name
-    )
+    speaker.add_to_context(message=message, source="user", name=name)
 
-    speaker.add_to_context(
-        message=response, source="speaker", chatStatus=isNewChat, name="gemma-7b"
-    )
+    speaker.add_to_context(message=response, source="speaker", name="gemma-7b")
 
     print("LM:", response)
     return make_response(jsonify({"response": response}, 200))
