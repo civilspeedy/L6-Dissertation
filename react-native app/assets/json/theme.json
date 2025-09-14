@@ -1,0 +1,16 @@
+{
+  "lightColours": {
+    "primary": "white",
+    "secondary": "black",
+    "userChatBubble": "#26EBB8",
+    "speakerChatBubble": "#3FC09E",
+    "modalColour": "#F4F4F4"
+  },
+  "darkColours": {
+    "primary": "black",
+    "secondary": "white",
+    "userChatBubble": "#4626EB",
+    "speakerChatBubble": "#543FC0",
+    "modalColour": "grey"
+  }
+}
