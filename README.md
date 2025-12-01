@@ -43,6 +43,8 @@ The goal of my dissertation was to explore the possibilities of using a contempo
 1. `pip install -r requirements.txt`
 2. `python main.py` or `python3 main.py`
 
+### Caveats
+
 - Current implementation is built with the assumption that the mobile app is run on an emulator (e.g. Android Emulator).
 - Assumes web server and mobile device are on the same network.
 - API keys are not included.
