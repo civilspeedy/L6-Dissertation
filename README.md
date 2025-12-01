@@ -31,6 +31,18 @@ The goal of my dissertation was to explore the possibilities of using a contempo
 
 ## Usage
 
+### Mobile
+
+1.  `npm install`
+2.  `npm update`
+3.  `npm start`
+4.  "a" or "i" to open related emulator
+
+### Webserver
+
+1. `pip install -r requirements.txt`
+2. `python main.py` or `python3 main.py`
+
 - Current implementation is built with the assumption that the mobile app is run on an emulator (e.g. Android Emulator).
 - Assumes web server and mobile device are on the same network.
 - API keys are not included.
